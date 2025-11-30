@@ -1,0 +1,17 @@
+mvnw
+mvnw.cmd
+.mvn/
+
+
+# Ignore Maven Wrapper in all modules
+*/mvnw
+*/mvnw.cmd
+*/.mvn/
+
+
+# IntelliJ
+.idea/
+*.iml
+
+# Maven targets
+*/target/
