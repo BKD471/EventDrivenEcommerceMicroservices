@@ -9,9 +9,9 @@
         <relativePath>../ecommerce-bom/pom.xml</relativePath>
     </parent>
     <groupId>com.forsaken.ecommerce</groupId>
-    <artifactId>payment</artifactId>
+    <artifactId>payment-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>payment</name>
+    <name>payment-service</name>
     <description>payment microservices for ecommerce microservices</description>
     <url/>
     <licenses>

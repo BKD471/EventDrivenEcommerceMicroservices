@@ -9,9 +9,9 @@
         <relativePath>../ecommerce-bom/pom.xml</relativePath>
     </parent>
     <groupId>com.forsaken.ecommerce</groupId>
-    <artifactId>order</artifactId>
+    <artifactId>order-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>order</name>
+    <name>order-service</name>
     <description>order microservices for ecommerce microservices</description>
     <url/>
     <licenses>

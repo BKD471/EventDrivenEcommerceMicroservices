@@ -9,9 +9,9 @@
         <relativePath>../ecommerce-bom/pom.xml</relativePath>
     </parent>
     <groupId>com.forsaken.ecommerce</groupId>
-    <artifactId>customer</artifactId>
+    <artifactId>customer-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>customer</name>
+    <name>customer-service</name>
     <description>customer service for ecommerce microservice</description>
     <url/>
     <licenses>

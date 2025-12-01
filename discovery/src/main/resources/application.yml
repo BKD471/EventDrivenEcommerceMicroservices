@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: discovery-service
+  profiles:
+    active: dev
+  config:
+    import: optional:configserver:http://localhost:8888           # from which location we need to fetch our configurations
+    # if we cant find the configuration of microservices, we don't application tpo fail, try to restart it
+management:
+  metrics:
+    tags:
+      application: ${spring.application.name}
+      environment: dev
