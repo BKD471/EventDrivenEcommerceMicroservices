@@ -1,0 +1,7 @@
+spring:
+  application: # if we cant find the configuration of microservices, we don't application tpo fail, try to restart it
+    name: customer-service
+  profiles:
+    active: dev
+  config:
+    import: optional:configserver:http://localhost:8888   # from which location we need to fetch our configurations
