@@ -9,7 +9,7 @@
         <relativePath>../ecommerce-bom/pom.xml</relativePath>
     </parent>
     <groupId>com.forsaken.ecommerce</groupId>
-    <artifactId>api-gateway</artifactId>
+    <artifactId>gateway-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>gateway-service</name>
     <description>Api Gateway Ecommerce microservices</description>

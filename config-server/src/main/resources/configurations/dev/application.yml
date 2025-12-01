@@ -1,0 +1,40 @@
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka
+    register-with-eureka: true
+    fetch-registry: true
+spring:
+  cloud:
+    config:
+      override-system-properties: false
+management:
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0 # we want 100% of requests to be traced
+
+  endpoints:
+    web:
+      exposure:
+        include: '*'   # include all endpoints & show all health metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  pattern:
+    # Logs will include traceId + spanId from OpenTelemetry MDC
+    level: "%5p [%X{traceId},%X{spanId}]"
+    # console output format (stdout)
+    console: "%d{HH:mm:ss.SSS} %5p [%X{traceId},%X{spanId}] [%thread] %logger{36} - %msg%n"
+  level:
+    root: INFO
+    org.springframework.web: INFO
+    org.springframework.data: INFO
+    org.springframework.cache: INFO
+    com.forsaken: DEBUG
+
+
