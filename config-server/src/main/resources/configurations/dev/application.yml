@@ -36,5 +36,3 @@ logging:
     org.springframework.data: INFO
     org.springframework.cache: INFO
     com.forsaken: DEBUG
-
-
