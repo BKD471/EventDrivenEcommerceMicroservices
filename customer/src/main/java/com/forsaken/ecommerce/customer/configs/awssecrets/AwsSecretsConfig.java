@@ -38,13 +38,13 @@ public class AwsSecretsConfig {
             Map<String, String> secrets =
                     mapper.readValue(getSecretValueResponse.secretString(), Map.class);
 
-            AwsCredentials props =
+            AwsCredentials awsCredentials =
                     AwsCredentials.builder()
                             .accessKeyId(secrets.get("awsAccessKey"))
                             .secretKey(secrets.get("awsSecretKey"))
                             .region(secrets.get("region"))
                             .build();
-            return props;
+            return awsCredentials;
         } catch (Exception e) {
             throw new RuntimeException("Failed to load AWS credentials from Secrets Manager", e);
         }
