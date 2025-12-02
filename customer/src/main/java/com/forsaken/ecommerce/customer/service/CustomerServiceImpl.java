@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -23,17 +24,25 @@ public class CustomerServiceImpl implements ICustomerService {
     private final Class<?> className = CustomerServiceImpl.class;
 
     @Override
-    public String createCustomer(CustomerRequest request) {
+    public String createCustomer(final CustomerRequest request) throws CustomerNotFoundExceptions {
         log.info("Creating customer with request {}", request);
+
+        final Optional<Customer> customer = customerRepository.findByEmail(request.email());
+        if (customer.isPresent()) {
+            throw new CustomerNotFoundExceptions(
+                    String.format("Customer is already present with the provided email: %s", request.email()),
+                    "createCustomer(CustomerRequest request) in " + className
+            );
+        }
         final String customerId = UUID.randomUUID().toString();
         customerRepository.save(request.toCustomer(customerId));
         return customerId;
     }
 
     @Override
-    public String updateCustomer(CustomerRequest request) throws CustomerNotFoundExceptions {
+    public String updateCustomer(final CustomerRequest request) throws CustomerNotFoundExceptions {
         log.info("Received request to update customer {}", request);
-        Customer customer = this.customerRepository.findById(request.id())
+        final Customer customer = this.customerRepository.findById(request.id())
                 .orElseThrow(() -> new CustomerNotFoundExceptions(
                         String.format("Cannot update customer:: No customer found with the provided ID: %s", request.id()),
                         "updateCustomer(CustomerRequest request) in " + className
@@ -66,6 +75,18 @@ public class CustomerServiceImpl implements ICustomerService {
     }
 
     @Override
+    public CustomerResponse findByEmail(final String customerEmail) throws CustomerNotFoundExceptions {
+        log.info("Received request to get customer by Email {}", customerEmail);
+        return this.customerRepository.findByEmail(customerEmail)
+                .map(Customer::fromCustomer)
+                .orElseThrow(() -> new CustomerNotFoundExceptions(
+                                String.format("No customer found with the provided Email: %s", customerEmail),
+                                "findById(final String customerId) in " + className
+                        )
+                );
+    }
+
+    @Override
     public boolean existsById(final String customerId) {
         log.info("Received request to check if customer with id {}", customerId);
         return this.customerRepository.findById(customerId)
@@ -79,7 +100,7 @@ public class CustomerServiceImpl implements ICustomerService {
         return String.format("Deleted customer with id %s", customerId);
     }
 
-    private void mergeCustomer(Customer customer, CustomerRequest request) {
+    private void mergeCustomer(final Customer customer, final CustomerRequest request) {
         if (StringUtils.isNotBlank(request.firstname())) {
             customer.setFirstName(request.firstname());
         }
