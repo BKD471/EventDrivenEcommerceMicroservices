@@ -1,2 +1,8 @@
 server:
   port: 8090
+
+aws:
+  secretsmanager:
+    secretName: EcommerceCredentials
+  dynamodb:
+    tableName: Customers
