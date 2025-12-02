@@ -14,7 +14,7 @@ public interface ICustomerService {
      * @param request - request to create customer
      * @return String - acknowledgment that customer has been created
      */
-    String createCustomer(final CustomerRequest request);
+    String createCustomer(final CustomerRequest request) throws CustomerNotFoundExceptions;
 
     /**
      * this service update customer record in database.
@@ -39,6 +39,13 @@ public interface ICustomerService {
      */
     CustomerResponse findById(final String customerId) throws CustomerNotFoundExceptions;
 
+    /**
+     * this service fetches customer data for the customerEmail from database.
+     *
+     * @param customerEmail - emailId of customer
+     * @return CustomerResponse - customer data for the emailId - customerEmail
+     */
+    CustomerResponse findByEmail(final String customerEmail) throws CustomerNotFoundExceptions;
 
     /**
      * this service checks whether customer exist in database or not.
@@ -52,7 +59,7 @@ public interface ICustomerService {
      * this service deletes customer for the customerId from database.
      *
      * @param customerId - id of customer
-     * @return ApiResponse<String> - acknowledgment that customer has been deleted from database
+     * @return String - acknowledgment that customer has been deleted from database
      */
     String deleteCustomer(final String customerId);
 }
