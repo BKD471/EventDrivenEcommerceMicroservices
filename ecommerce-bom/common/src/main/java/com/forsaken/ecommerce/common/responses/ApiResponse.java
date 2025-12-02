@@ -11,6 +11,6 @@ public record ApiResponse<T>(
 ) {
 
     public enum Status {
-        SUCCESS,FAILED,ERROR
+        SUCCESS, FAILED, ERROR
     }
 }

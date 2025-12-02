@@ -11,7 +11,7 @@ public class ProductNotFoundExceptions extends Exception {
     private final String methodName;
 
     public ProductNotFoundExceptions(final String message,
-                                      final String methodName
+                                     final String methodName
     ) {
         super(String.format("%s in %s", message, methodName));
         this.message = message;
