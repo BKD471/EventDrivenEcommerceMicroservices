@@ -18,7 +18,7 @@ public class CustomerControllerImpl implements ICustomerController {
     private final ICustomerService customerService;
 
     @Override
-    public ResponseEntity<ApiResponse<?>> createCustomer(final CustomerRequest request) {
+    public ResponseEntity<ApiResponse<?>> createCustomer(final CustomerRequest request) throws CustomerNotFoundExceptions {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(
                         ApiResponse.builder()
@@ -76,7 +76,19 @@ public class CustomerControllerImpl implements ICustomerController {
                         ApiResponse.builder()
                                 .status(ApiResponse.Status.SUCCESS)
                                 .data(customerService.findById(customerId))
-                                .message("Customer data Fetched for the id " + customerId)
+                                .message("Customer data fetched for the id " + customerId)
+                                .build()
+                );
+    }
+
+    @Override
+    public ResponseEntity<ApiResponse<?>> findByEmail(final String customerEmail) throws CustomerNotFoundExceptions {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(
+                        ApiResponse.builder()
+                                .status(ApiResponse.Status.SUCCESS)
+                                .data(customerService.findByEmail(customerEmail))
+                                .message("Customer data fetched for the emailId " + customerEmail)
                                 .build()
                 );
     }

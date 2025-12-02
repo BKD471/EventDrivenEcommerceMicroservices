@@ -4,43 +4,54 @@ import com.forsaken.ecommerce.customer.dto.CustomerResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondarySortKey;
 
+@DynamoDbBean
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Customer {
 
-    private String id;
+    private String customerId;
     private String firstName;
     private String lastName;
-    private String email;
+    private String customerEmail;
     private Address address;
 
-
+    @DynamoDbPartitionKey
+    @DynamoDbAttribute("customerId")
     public String getId() {
-        return id;
+        return customerId;
     }
 
-
+    @DynamoDbSecondaryPartitionKey(indexNames = "email-index")
+    @DynamoDbAttribute("customerEmail")
     public String getEmail() {
-        return email;
+        return customerEmail;
     }
 
+    @DynamoDbAttribute("firstName")
     public String getFirstName() {
         return firstName;
     }
 
+    @DynamoDbSecondarySortKey(indexNames = "lastName-index")
+    @DynamoDbAttribute("lastName")
     public String getLastName() {
         return lastName;
     }
 
+    @DynamoDbAttribute("address")
     public Address getAddress() {
         return address;
     }
 
-
-    public void setId(String id) {
-        this.id = id;
+    public void setCustomerId(String customerId) {
+        this.customerId = customerId;
     }
 
     public void setFirstName(String firstName) {
@@ -51,8 +62,8 @@ public class Customer {
         this.lastName = lastName;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setEmail(String customerEmail) {
+        this.customerEmail = customerEmail;
     }
 
     public void setAddress(Address address) {

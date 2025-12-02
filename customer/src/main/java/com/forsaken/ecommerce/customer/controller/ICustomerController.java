@@ -27,7 +27,7 @@ public interface ICustomerController {
     @PostMapping("/create")
     ResponseEntity<ApiResponse<?>> createCustomer(
             @RequestBody @Valid final CustomerRequest request
-    );
+    ) throws CustomerNotFoundExceptions;
 
     /**
      * this service update customer record in database.
@@ -68,6 +68,17 @@ public interface ICustomerController {
     @GetMapping("/{customer-id}")
     ResponseEntity<ApiResponse<?>> findById(
             @PathVariable("customer-id") @NotBlank final String customerId
+    ) throws CustomerNotFoundExceptions;
+
+    /**
+     * this service fetches customer data for the customerId from database.
+     *
+     * @param customerEmail - emailId of customer
+     * @return ApiResponse<CustomerResponse> - customer data for the emailId - customerEmail with status code.
+     */
+    @GetMapping("/{customer-email}")
+    ResponseEntity<ApiResponse<?>> findByEmail(
+            @PathVariable("customer-email") @NotBlank final String customerEmail
     ) throws CustomerNotFoundExceptions;
 
     /**
