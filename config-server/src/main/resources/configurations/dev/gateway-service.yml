@@ -1,2 +1,13 @@
 server:
   port: 8222
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: customer-service
+          uri: lb:http://CUSTOMER-SERVICE
+          predicates:
+            - Path=/api/v1/customers/**
+      forwarded:
+        enabled: true

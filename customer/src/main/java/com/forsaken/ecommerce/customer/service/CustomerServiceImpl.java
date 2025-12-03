@@ -49,8 +49,8 @@ public class CustomerServiceImpl implements ICustomerService {
                 ));
         mergeCustomer(customer, request);
         this.customerRepository.save(customer);
-        log.info("Updated customer with id {}", customer.getId());
-        return String.format("Updated customer with id %s", customer.getId());
+        log.info("Updated customer with id {}", customer.getCustomerId());
+        return String.format("Updated customer with id %s", customer.getCustomerId());
     }
 
     @Override
@@ -108,7 +108,7 @@ public class CustomerServiceImpl implements ICustomerService {
             customer.setLastName(request.lastname());
         }
         if (StringUtils.isNotBlank(request.email())) {
-            customer.setEmail(request.email());
+            customer.setCustomerEmail(request.email());
         }
         if (request.address() != null) {
             customer.setAddress(request.address());
