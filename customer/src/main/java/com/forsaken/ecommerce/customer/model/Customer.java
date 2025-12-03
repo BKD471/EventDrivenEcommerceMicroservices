@@ -24,13 +24,13 @@ public class Customer {
 
     @DynamoDbPartitionKey
     @DynamoDbAttribute("customerId")
-    public String getId() {
+    public String getCustomerId() {
         return customerId;
     }
 
     @DynamoDbSecondaryPartitionKey(indexNames = "email-index")
     @DynamoDbAttribute("customerEmail")
-    public String getEmail() {
+    public String getCustomerEmail() {
         return customerEmail;
     }
 
@@ -62,7 +62,7 @@ public class Customer {
         this.lastName = lastName;
     }
 
-    public void setEmail(String customerEmail) {
+    public void setCustomerEmail(String customerEmail) {
         this.customerEmail = customerEmail;
     }
 
@@ -72,10 +72,10 @@ public class Customer {
 
     public CustomerResponse fromCustomer() {
         return new CustomerResponse(
-                this.getId(),
+                this.getCustomerId(),
                 this.getFirstName(),
                 this.getLastName(),
-                this.getEmail(),
+                this.getCustomerEmail(),
                 this.getAddress()
         );
     }
