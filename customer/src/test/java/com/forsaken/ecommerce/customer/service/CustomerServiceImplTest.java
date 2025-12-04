@@ -57,7 +57,13 @@ class CustomerServiceImplTest {
     @Test
     void createCustomer_ShouldReturnGeneratedId_WhenEmailNotPresent() throws CustomerNotFoundExceptions {
         // Given
-        final CustomerRequest request = constructCustomerRequest();
+        final CustomerRequest request = CustomerRequest.builder()
+                .id(CUSTOMER_ID)
+                .firstname(FIRST_NAME)
+                .lastname(LAST_NAME)
+                .email(EMAIL_NEW)
+                .address(constructAddress())
+                .build();
         when(customerRepository.findByEmail(EMAIL_NEW)).thenReturn(Optional.empty());
         ArgumentCaptor<Customer> savedCaptor = ArgumentCaptor.forClass(Customer.class);
 
@@ -248,16 +254,6 @@ class CustomerServiceImplTest {
                 .firstName(firstName)
                 .lastName(lastName)
                 .customerEmail(customerEmail)
-                .address(constructAddress())
-                .build();
-    }
-
-    private CustomerRequest constructCustomerRequest() {
-        return CustomerRequest.builder()
-                .id(CUSTOMER_ID)
-                .firstname(FIRST_NAME)
-                .lastname(LAST_NAME)
-                .email(EMAIL_NEW)
                 .address(constructAddress())
                 .build();
     }
