@@ -32,7 +32,8 @@ import static org.mockito.Mockito.when;
 
 public class CustomerRepositoryTest {
 
-    private static final String customerId = "123";
+    private static final String CUSTOMER_ID = "cust-123";
+    private static final String CUSTOMER_EMAIL = "abc@gmail.com";
 
     private DynamoDbEnhancedClient enhancedClient;
     private DynamoDbTable<Customer> customerTable;
@@ -58,7 +59,7 @@ public class CustomerRepositoryTest {
     @Test
     void testSave() {
         // Given
-        final Customer customer = constructCustomer(customerId);
+        final Customer customer = constructCustomer(CUSTOMER_ID);
 
         // When
         repository.save(customer);
@@ -71,17 +72,17 @@ public class CustomerRepositoryTest {
     @Test
     void testFindById_Found() {
         // Given
-        final Customer mockCustomer = constructCustomer(customerId);
+        final Customer mockCustomer = constructCustomer(CUSTOMER_ID);
 
         // When
         // Capture the consumer passed to getItem and stub getItem using the captor
         final ArgumentCaptor<Consumer> captor = ArgumentCaptor.forClass(Consumer.class);
         when(customerTable.getItem(captor.capture())).thenReturn(mockCustomer);
-        final Optional<Customer> result = repository.findById(customerId);
+        final Optional<Customer> result = repository.findById(CUSTOMER_ID);
 
         // Then
         assertTrue(result.isPresent());
-        assertEquals(customerId, result.get().getCustomerId());
+        assertEquals(CUSTOMER_ID, result.get().getCustomerId());
         // Additional verification: ensure a Consumer was passed into getItem (i.e. repository built the request)
         Consumer captured = captor.getValue();
         assertNotNull(captured);
@@ -92,7 +93,7 @@ public class CustomerRepositoryTest {
         // When
         final ArgumentCaptor<Consumer> captor = ArgumentCaptor.forClass(Consumer.class);
         when(customerTable.getItem(captor.capture())).thenReturn(null);
-        final Optional<Customer> result = repository.findById(customerId);
+        final Optional<Customer> result = repository.findById(CUSTOMER_ID);
 
         // Then
         assertFalse(result.isPresent());
@@ -104,8 +105,8 @@ public class CustomerRepositoryTest {
     @Test
     void testFindAll() {
         // Given
-        final Customer customerOne = constructCustomer("123");
-        final Customer customerTwo = constructCustomer("456");
+        final Customer customerOne = constructCustomer("cust-123");
+        final Customer customerTwo = constructCustomer("cust-456");
 
         // When
         // Mock Page
@@ -126,8 +127,8 @@ public class CustomerRepositoryTest {
 
         // Then
         assertEquals(2, all.size());
-        assertEquals("123", all.get(0).getCustomerId());
-        assertEquals("456", all.get(1).getCustomerId());
+        assertEquals("cust-123", all.get(0).getCustomerId());
+        assertEquals("cust-456", all.get(1).getCustomerId());
     }
 
 
@@ -135,7 +136,7 @@ public class CustomerRepositoryTest {
     void testDeleteById() {
         // When
         final ArgumentCaptor<Consumer> captor = ArgumentCaptor.forClass(Consumer.class);
-        repository.deleteById(customerId);
+        repository.deleteById(CUSTOMER_ID);
 
         // Then
         // Verify deleteItem was called exactly once and capture the Consumer argument
@@ -149,7 +150,7 @@ public class CustomerRepositoryTest {
     @Test
     void testFindByEmail_Found() {
         // Given
-        final Customer customer = constructCustomer(customerId);
+        final Customer customer = constructCustomer(CUSTOMER_ID);
 
         // When
         when(customerTable.index("email-index")).thenReturn(emailIndex);
@@ -166,7 +167,7 @@ public class CustomerRepositoryTest {
 
         // Then
         assertTrue(result.isPresent());
-        assertEquals(customerId, result.get().getCustomerId());
+        assertEquals(CUSTOMER_ID, result.get().getCustomerId());
         // Verify repository actually supplied a Consumer
         assertNotNull(captor.getValue());
     }
@@ -194,7 +195,7 @@ public class CustomerRepositoryTest {
 
 
     private Customer constructCustomer(final String customerId) {
-        return Customer.builder().customerId(customerId).firstName("John").customerEmail("abc@gmail.com").build();
+        return Customer.builder().customerId(customerId).firstName("John").customerEmail(CUSTOMER_EMAIL).build();
     }
 }
 

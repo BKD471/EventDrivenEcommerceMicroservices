@@ -1,7 +1,9 @@
 package com.forsaken.ecommerce.customer.dto;
 
 import com.forsaken.ecommerce.customer.model.Address;
+import lombok.Builder;
 
+@Builder
 public record CustomerResponse(
         String id,
         String firstname,

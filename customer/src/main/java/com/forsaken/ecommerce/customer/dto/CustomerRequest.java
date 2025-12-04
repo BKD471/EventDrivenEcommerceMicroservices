@@ -4,9 +4,11 @@ import com.forsaken.ecommerce.customer.model.Address;
 import com.forsaken.ecommerce.customer.model.Customer;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 import org.springframework.validation.annotation.Validated;
 
 @Validated
+@Builder
 public record CustomerRequest(
         String id,
 
