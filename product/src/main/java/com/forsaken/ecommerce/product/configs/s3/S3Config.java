@@ -21,7 +21,7 @@ public class S3Config {
 
     @Bean
     public S3Client s3Client() {
-        String region = accessCredentials.region();
+        final String region = accessCredentials.region();
 
         return S3Client.builder()
                 .region(Region.of(region))
@@ -31,7 +31,7 @@ public class S3Config {
 
     @Bean
     public S3Presigner s3Presigner() {
-        String region = accessCredentials.region();
+        final String region = accessCredentials.region();
 
         return S3Presigner.builder()
                 .region(Region.of(region))
@@ -40,8 +40,8 @@ public class S3Config {
     }
 
     private AwsCredentialsProvider credentialsProvider() {
-        String accessKeyId = accessCredentials.accessKeyId();
-        String secretAccessKey = accessCredentials.secretKey();
+        final String accessKeyId = accessCredentials.accessKeyId();
+        final String secretAccessKey = accessCredentials.secretKey();
 
         if (accessKeyId != null && !accessKeyId.isBlank() &&
                 secretAccessKey != null && !secretAccessKey.isBlank()) {

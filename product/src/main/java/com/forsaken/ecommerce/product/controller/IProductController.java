@@ -1,5 +1,6 @@
 package com.forsaken.ecommerce.product.controller;
 
+import com.forsaken.ecommerce.common.exceptions.ProductNotFoundExceptions;
 import com.forsaken.ecommerce.common.responses.ApiResponse;
 import com.forsaken.ecommerce.product.dto.Direction;
 import com.forsaken.ecommerce.product.dto.ProductPurchaseRequest;
@@ -7,6 +8,7 @@ import com.forsaken.ecommerce.product.dto.ProductRequest;
 import com.forsaken.ecommerce.product.model.Category;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,19 +46,19 @@ public interface IProductController {
     @PostMapping("/purchase")
     ResponseEntity<ApiResponse<?>> purchaseProducts(
             @RequestBody @Valid final List<ProductPurchaseRequest> request
-    );
+    ) throws ProductNotFoundExceptions;
 
 
     @GetMapping("/{product-id}")
     ResponseEntity<ApiResponse<?>> findById(
-            @PathVariable("product-id") @NotBlank final Integer productId,
-            @RequestParam(defaultValue = "True") final Boolean signedUrl
+            @PathVariable("product-id") @NotNull final Integer productId,
+            @RequestParam(name = "signedUrl",defaultValue = "True") final Boolean signedUrl
     );
 
 
     @GetMapping
     ResponseEntity<ApiResponse<?>> findAll(
-            @RequestParam(defaultValue = "True") final Boolean signedUrl
+            @RequestParam(name = "signedUrl",defaultValue = "True") final Boolean signedUrl
     );
 
 

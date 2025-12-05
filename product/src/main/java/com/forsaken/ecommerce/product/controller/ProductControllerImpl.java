@@ -1,10 +1,14 @@
 package com.forsaken.ecommerce.product.controller;
 
+import com.forsaken.ecommerce.common.exceptions.ProductNotFoundExceptions;
 import com.forsaken.ecommerce.common.responses.ApiResponse;
 import com.forsaken.ecommerce.product.dto.Direction;
 import com.forsaken.ecommerce.product.dto.ProductPurchaseRequest;
 import com.forsaken.ecommerce.product.dto.ProductRequest;
 import com.forsaken.ecommerce.product.model.Category;
+import com.forsaken.ecommerce.product.service.IProductService;
+import com.forsaken.ecommerce.product.service.IS3Service;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,7 +19,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 public class ProductControllerImpl implements IProductController {
+
+    private final IProductService service;
+    private final IS3Service s3Service;
 
     @Override
     public ResponseEntity<ApiResponse<?>> getPresignedUrl(final String fileName, final String contentType) {
@@ -23,7 +31,7 @@ public class ProductControllerImpl implements IProductController {
                 .body(
                         ApiResponse.builder()
                                 .status(ApiResponse.Status.SUCCESS)
-                                .data(null)
+                                .data(s3Service.generatePresignedUploadUrl(fileName, contentType))
                                 .message("Presigned Url Generated.")
                                 .build()
                 );
@@ -35,7 +43,7 @@ public class ProductControllerImpl implements IProductController {
                 .body(
                         ApiResponse.builder()
                                 .status(ApiResponse.Status.SUCCESS)
-                                .data(null)
+                                .data(service.createProduct(productRequest))
                                 .message("Product Created")
                                 .build()
                 );
@@ -47,19 +55,19 @@ public class ProductControllerImpl implements IProductController {
                 .body(
                         ApiResponse.builder()
                                 .status(ApiResponse.Status.SUCCESS)
-                                .data(null)
+                                .data(s3Service.generatePresignedDownloadUrl(key))
                                 .message("Presigned Url to download Product Image Generated.")
                                 .build()
                 );
     }
 
     @Override
-    public ResponseEntity<ApiResponse<?>> purchaseProducts(final List<ProductPurchaseRequest> request) {
+    public ResponseEntity<ApiResponse<?>> purchaseProducts(final List<ProductPurchaseRequest> request) throws ProductNotFoundExceptions {
         return ResponseEntity.status(HttpStatus.ACCEPTED)
                 .body(
                         ApiResponse.builder()
                                 .status(ApiResponse.Status.SUCCESS)
-                                .data(null)
+                                .data(service.purchaseProducts(request))
                                 .message("Product Purchased.")
                                 .build()
                 );
@@ -71,7 +79,7 @@ public class ProductControllerImpl implements IProductController {
                 .body(
                         ApiResponse.builder()
                                 .status(ApiResponse.Status.SUCCESS)
-                                .data(null)
+                                .data(service.getProductById(productId,signedUrl))
                                 .message("Product Found with Id: " + productId)
                                 .build()
                 );
@@ -83,7 +91,7 @@ public class ProductControllerImpl implements IProductController {
                 .body(
                         ApiResponse.builder()
                                 .status(ApiResponse.Status.SUCCESS)
-                                .data(null)
+                                .data(service.getAllProducts(signedUrl))
                                 .message("Fetched All Products Information.")
                                 .build()
                 );
@@ -98,7 +106,7 @@ public class ProductControllerImpl implements IProductController {
                 .body(
                         ApiResponse.builder()
                                 .status(ApiResponse.Status.SUCCESS)
-                                .data(null)
+                                .data(service.findAllProducts(fromDate, toDate))
                                 .message("Fetched All Products Information created between fromDate to toDate.")
                                 .build()
                 );
@@ -114,7 +122,7 @@ public class ProductControllerImpl implements IProductController {
                 .body(
                         ApiResponse.builder()
                                 .status(ApiResponse.Status.SUCCESS)
-                                .data(null)
+                                .data(service.findAllProductsByCategory(category, price, direction))
                                 .message("Fetched All Products By Category:category.")
                                 .build()
                 );
