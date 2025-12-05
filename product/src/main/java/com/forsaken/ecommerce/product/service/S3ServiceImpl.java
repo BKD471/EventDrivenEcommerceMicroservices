@@ -35,7 +35,7 @@ public class S3ServiceImpl implements IS3Service {
 
         return Map.of(
                 "uploadUrl", presignedRequest.url().toString(),
-                "key", key   // 👈 include this too!
+                "key", key
         );
     }
 
