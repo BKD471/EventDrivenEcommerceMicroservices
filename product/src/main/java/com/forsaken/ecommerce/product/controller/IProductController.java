@@ -2,10 +2,9 @@ package com.forsaken.ecommerce.product.controller;
 
 import com.forsaken.ecommerce.common.exceptions.ProductNotFoundExceptions;
 import com.forsaken.ecommerce.common.responses.ApiResponse;
-import com.forsaken.ecommerce.product.dto.Direction;
 import com.forsaken.ecommerce.product.dto.ProductPurchaseRequest;
 import com.forsaken.ecommerce.product.dto.ProductRequest;
-import com.forsaken.ecommerce.product.model.Category;
+import com.forsaken.ecommerce.product.exceptions.CategoryNotFoundExceptions;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -23,61 +22,131 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static com.forsaken.ecommerce.product.dto.ProductRequest.Direction;
+
 
 @RequestMapping("/api/v1/products")
 public interface IProductController {
 
+    /**
+     * this service generates presigned url that will be used to upload or download file from S3.
+     *
+     * @param fileName    - name if file to be uploaded
+     * @param contentType - type of file
+     * @return ApiResponse<?> - acknowledgment that presigned url has been generated with status code.
+     */
     @GetMapping("/presigned-url")
     ResponseEntity<ApiResponse<?>> getPresignedUrl(
-            @RequestParam @NotBlank final String fileName,
-            @RequestParam @NotBlank final String contentType
+            @RequestParam(name = "fileName") @NotBlank final String fileName,
+            @RequestParam(name = "contentType") @NotBlank final String contentType
     );
 
 
+    /**
+     * this service creates product in database.
+     *
+     * @param productRequest - request to create product
+     * @return ApiResponse<?> - acknowledgment that product has been created in database with status code.
+     */
     @PostMapping(value = "/create")
     ResponseEntity<ApiResponse<?>> createProduct(
             @RequestBody @Valid final ProductRequest productRequest) throws IOException;
 
 
+    /**
+     * this service generates presigned url that will be used to upload or download file from S3..
+     *
+     * @param key - request to create product
+     * @return ApiResponse<?> - url to download file from S3.
+     */
     @GetMapping("/download-url")
-    ResponseEntity<ApiResponse<?>> getDownloadUrl(@NotBlank @RequestParam String key);
+    ResponseEntity<ApiResponse<?>> getDownloadUrl(@NotBlank @RequestParam(name = "key") final String key);
 
 
+    /**
+     * this service purchase products from database.
+     *
+     * @param request - request to purchase product
+     * @param page    - index of page starts from 1
+     * @param size    - no of elements per each page
+     * @return ApiResponse<?> - acknowledgment that product has been purchased from database with status code.
+     */
     @PostMapping("/purchase")
     ResponseEntity<ApiResponse<?>> purchaseProducts(
-            @RequestBody @Valid final List<ProductPurchaseRequest> request
+            @RequestBody @Valid final List<ProductPurchaseRequest> request,
+            @RequestParam(name = "page", defaultValue = "1") final int page,
+            @RequestParam(name = "size", defaultValue = "3") final int size
     ) throws ProductNotFoundExceptions;
 
 
+    /**
+     * this service fetches product information by id
+     *
+     * @param productId - id of product
+     * @param signedUrl - is signedUrl or not for viewing/downloading product image
+     * @return ApiResponse<?>   - product information with status code.
+     */
     @GetMapping("/{product-id}")
     ResponseEntity<ApiResponse<?>> findById(
             @PathVariable("product-id") @NotNull final Integer productId,
-            @RequestParam(name = "signedUrl",defaultValue = "True") final Boolean signedUrl
+            @RequestParam(name = "signedUrl", defaultValue = "True") final Boolean signedUrl
     );
 
 
+    /**
+     * this service fetches all products from database.
+     *
+     * @param signedUrl - is signedUrl or not for viewing/downloading product image
+     * @param page      - index of page starts from 1
+     * @param size      - no of elements per each page
+     * @return ApiResponse<?> - page of all product information with status code.
+     */
     @GetMapping
     ResponseEntity<ApiResponse<?>> findAll(
-            @RequestParam(name = "signedUrl",defaultValue = "True") final Boolean signedUrl
+            @RequestParam(name = "signedUrl", defaultValue = "True") final Boolean signedUrl,
+            @RequestParam(name = "page", defaultValue = "1") final int page,
+            @RequestParam(name = "size", defaultValue = "3") final int size
     );
 
 
+    /**
+     * this service fetches all products from database that created between fromDate & endDate.
+     *
+     * @param fromDate - beginning point of search when product was created
+     * @param toDate   - ending point of search when product was created
+     * @param page     - index of page starts from 1
+     * @param size     - no of elements per each page
+     * @return ApiResponse<?> - page of all product information with status code.
+     */
     @GetMapping("/findAll")
     ResponseEntity<ApiResponse<?>> findAllProducts(
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            final LocalDateTime fromDate,
+            @RequestParam(name = "fromDate", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) final LocalDateTime fromDate,
 
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            final LocalDateTime toDate
+            @RequestParam(name = "toDate", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) final LocalDateTime toDate,
+
+            @RequestParam(name = "page", defaultValue = "1") final int page,
+            @RequestParam(name = "size", defaultValue = "3") final int size
     );
 
 
-    @GetMapping("/category")
+    /**
+     * this service fetches all products from database that has the category and price limit wised by client..
+     *
+     * @param categoryId - id of category of that product client needs
+     * @param price      - price limit to which we search
+     * @param direction  - direction of search, either less than equals price or greater than equals price
+     * @param page       - index of page starts from 1
+     * @param size       - no of elements per each page
+     * @return ApiResponse<?> - page of all product information that falls under this category and has price limit with status code.
+     */
+    @GetMapping("/category/{categoryId}")
     ResponseEntity<ApiResponse<?>> findAllProductsByCategory(
-            @PathVariable("category") @Valid final Category category,
+            @PathVariable("categoryId") @NotNull final Integer categoryId,
             @RequestParam(value = "price", defaultValue = "100") final BigDecimal price,
-            @RequestParam(value = "direction", defaultValue = "GE") final Direction direction
-    );
+            @RequestParam(value = "direction", defaultValue = "GE") final Direction direction,
+            @RequestParam(name = "page", defaultValue = "1") final int page,
+            @RequestParam(name = "size", defaultValue = "3") final int size
+    ) throws CategoryNotFoundExceptions;
 }

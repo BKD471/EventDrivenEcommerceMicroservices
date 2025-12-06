@@ -33,6 +33,11 @@ public record ProductRequest(
         String imageUrl
 ) {
 
+    public enum Direction {
+        GE,LE
+    }
+
+
     public Product toProduct() {
         return Product.builder()
                 .id(this.id())
