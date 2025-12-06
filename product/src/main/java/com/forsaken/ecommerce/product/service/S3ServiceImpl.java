@@ -41,8 +41,12 @@ public class S3ServiceImpl implements IS3Service {
                 builder.signatureDuration(Duration.ofMinutes(s3Properties.expiration())) // URL valid for 30 mins
                         .putObjectRequest(putObjectRequest)
         );
-        log.info("Presigned Upload URL: {}", presignedRequest.url());
 
+        if (presignedRequest == null || presignedRequest.url() == null) {
+            throw new IllegalStateException("Unable to generate presigned upload URL");
+        }
+
+        log.info("Presigned Upload URL: {}", presignedRequest.url());
         return Map.of(
                 "uploadUrl", presignedRequest.url().toString(),
                 "key", key
@@ -62,6 +66,11 @@ public class S3ServiceImpl implements IS3Service {
                 builder.signatureDuration(Duration.ofMinutes(s3Properties.expiration()))
                         .getObjectRequest(getObjectRequest)
         );
+
+        if (presignedGet == null || presignedGet.url() == null) {
+            throw new IllegalStateException("Unable to generate presigned download URL");
+        }
+
         log.info("Presigned Download URL: {}", presignedGet.url());
         return presignedGet.url().toString();
     }

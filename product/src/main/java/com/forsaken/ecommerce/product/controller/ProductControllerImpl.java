@@ -2,8 +2,11 @@ package com.forsaken.ecommerce.product.controller;
 
 import com.forsaken.ecommerce.common.exceptions.ProductNotFoundExceptions;
 import com.forsaken.ecommerce.common.responses.ApiResponse;
+import com.forsaken.ecommerce.product.dto.PagedResponse;
 import com.forsaken.ecommerce.product.dto.ProductPurchaseRequest;
+import com.forsaken.ecommerce.product.dto.ProductPurchaseResponse;
 import com.forsaken.ecommerce.product.dto.ProductRequest;
+import com.forsaken.ecommerce.product.dto.ProductResponse;
 import com.forsaken.ecommerce.product.exceptions.CategoryNotFoundExceptions;
 import com.forsaken.ecommerce.product.service.IProductService;
 import com.forsaken.ecommerce.product.service.IS3Service;
@@ -16,6 +19,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import static com.forsaken.ecommerce.product.dto.ProductRequest.Direction;
 
@@ -27,10 +31,10 @@ public class ProductControllerImpl implements IProductController {
     private final IS3Service s3Service;
 
     @Override
-    public ResponseEntity<ApiResponse<?>> getPresignedUrl(final String fileName, final String contentType) {
+    public ResponseEntity<ApiResponse<Map<String, String>>> getPresignedUrl(final String fileName, final String contentType) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(
-                        ApiResponse.builder()
+                        ApiResponse.<Map<String, String>>builder()
                                 .status(ApiResponse.Status.SUCCESS)
                                 .data(s3Service.generatePresignedUploadUrl(fileName, contentType))
                                 .message("Presigned Url Generated.")
@@ -39,10 +43,10 @@ public class ProductControllerImpl implements IProductController {
     }
 
     @Override
-    public ResponseEntity<ApiResponse<?>> createProduct(final ProductRequest productRequest) throws IOException {
+    public ResponseEntity<ApiResponse<Integer>> createProduct(final ProductRequest productRequest) throws IOException {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(
-                        ApiResponse.builder()
+                        ApiResponse.<Integer>builder()
                                 .status(ApiResponse.Status.SUCCESS)
                                 .data(service.createProduct(productRequest))
                                 .message("Product Created")
@@ -51,10 +55,10 @@ public class ProductControllerImpl implements IProductController {
     }
 
     @Override
-    public ResponseEntity<ApiResponse<?>> getDownloadUrl(final String key) {
+    public ResponseEntity<ApiResponse<String>> getDownloadUrl(final String key) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(
-                        ApiResponse.builder()
+                        ApiResponse.<String>builder()
                                 .status(ApiResponse.Status.SUCCESS)
                                 .data(s3Service.generatePresignedDownloadUrl(key))
                                 .message("Presigned Url to download Product Image Generated.")
@@ -63,14 +67,14 @@ public class ProductControllerImpl implements IProductController {
     }
 
     @Override
-    public ResponseEntity<ApiResponse<?>> purchaseProducts(
+    public ResponseEntity<ApiResponse<PagedResponse<ProductPurchaseResponse>>> purchaseProducts(
             final List<ProductPurchaseRequest> request,
             final int page,
             final int size
     ) throws ProductNotFoundExceptions {
         return ResponseEntity.status(HttpStatus.ACCEPTED)
                 .body(
-                        ApiResponse.builder()
+                        ApiResponse.<PagedResponse<ProductPurchaseResponse>>builder()
                                 .status(ApiResponse.Status.SUCCESS)
                                 .data(service.purchaseProducts(request, page, size))
                                 .message("Product Purchased.")
@@ -79,10 +83,10 @@ public class ProductControllerImpl implements IProductController {
     }
 
     @Override
-    public ResponseEntity<ApiResponse<?>> findById(final Integer productId, final Boolean signedUrl) {
+    public ResponseEntity<ApiResponse<ProductResponse>> findById(final Integer productId, final Boolean signedUrl) throws ProductNotFoundExceptions {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(
-                        ApiResponse.builder()
+                        ApiResponse.<ProductResponse>builder()
                                 .status(ApiResponse.Status.SUCCESS)
                                 .data(service.getProductById(productId, signedUrl))
                                 .message("Product Found with Id: " + productId)
@@ -91,10 +95,10 @@ public class ProductControllerImpl implements IProductController {
     }
 
     @Override
-    public ResponseEntity<ApiResponse<?>> findAll(final Boolean signedUrl, final int page, final int size) {
+    public ResponseEntity<ApiResponse<PagedResponse<ProductResponse>>> findAll(final Boolean signedUrl, final int page, final int size) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(
-                        ApiResponse.builder()
+                        ApiResponse.<PagedResponse<ProductResponse>>builder()
                                 .status(ApiResponse.Status.SUCCESS)
                                 .data(service.getAllProducts(signedUrl, page, size))
                                 .message("Fetched All Products Information.")
@@ -103,14 +107,14 @@ public class ProductControllerImpl implements IProductController {
     }
 
     @Override
-    public ResponseEntity<ApiResponse<?>> findAllProducts(final LocalDateTime fromDate,
-                                                          final LocalDateTime toDate,
-                                                          final int page,
-                                                          final int size
+    public ResponseEntity<ApiResponse<PagedResponse<ProductResponse>>> findAllProducts(final LocalDateTime fromDate,
+                                                                                       final LocalDateTime toDate,
+                                                                                       final int page,
+                                                                                       final int size
     ) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(
-                        ApiResponse.builder()
+                        ApiResponse.<PagedResponse<ProductResponse>>builder()
                                 .status(ApiResponse.Status.SUCCESS)
                                 .data(service.findAllProducts(fromDate, toDate, page, size))
                                 .message("Fetched All Products Information created between fromDate to toDate.")
@@ -119,7 +123,7 @@ public class ProductControllerImpl implements IProductController {
     }
 
     @Override
-    public ResponseEntity<ApiResponse<?>> findAllProductsByCategory(
+    public ResponseEntity<ApiResponse<PagedResponse<ProductResponse>>> findAllProductsByCategory(
             final Integer categoryId,
             final BigDecimal price,
             final Direction direction,
@@ -128,7 +132,7 @@ public class ProductControllerImpl implements IProductController {
     ) throws CategoryNotFoundExceptions {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(
-                        ApiResponse.builder()
+                        ApiResponse.<PagedResponse<ProductResponse>>builder()
                                 .status(ApiResponse.Status.SUCCESS)
                                 .data(service.findAllProductsByCategory(categoryId, price, direction, page, size))
                                 .message("Fetched All Products By Category:category.")
