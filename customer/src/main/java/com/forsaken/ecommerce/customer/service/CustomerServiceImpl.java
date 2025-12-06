@@ -3,6 +3,7 @@ package com.forsaken.ecommerce.customer.service;
 import com.forsaken.ecommerce.common.exceptions.CustomerNotFoundExceptions;
 import com.forsaken.ecommerce.customer.dto.CustomerRequest;
 import com.forsaken.ecommerce.customer.dto.CustomerResponse;
+import com.forsaken.ecommerce.customer.dto.PagedResponse;
 import com.forsaken.ecommerce.customer.model.Customer;
 import com.forsaken.ecommerce.customer.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
 
 @Service
 @Slf4j
@@ -54,12 +56,27 @@ public class CustomerServiceImpl implements ICustomerService {
     }
 
     @Override
-    public List<CustomerResponse> findAllCustomers() {
+    public PagedResponse<CustomerResponse> findAllCustomers(final int page,final int size) {
         log.info("Received request to get all customers");
-        return this.customerRepository.findAll()
+        final List<CustomerResponse> customerResponses=this.customerRepository.findAll()
                 .stream()
                 .map(Customer::fromCustomer)
                 .collect(Collectors.toList());
+
+        final int finalPage = Math.max(page - 1, 0);
+        final int start = finalPage * size;
+        final int end = Math.min(start + size, customerResponses.size());
+
+        final List<CustomerResponse> pagedContent =
+                (start >= customerResponses.size()) ? List.of() : customerResponses.subList(start, end);
+        final int totalPages = (int) Math.ceil((double) customerResponses.size() / size);
+        return PagedResponse.<CustomerResponse>builder()
+                .content(pagedContent)
+                .page(finalPage + 1)
+                .size(size)
+                .totalElements(customerResponses.size())
+                .totalPages(totalPages)
+                .build();
     }
 
     @Override

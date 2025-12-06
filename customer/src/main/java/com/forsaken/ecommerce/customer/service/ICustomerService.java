@@ -3,8 +3,8 @@ package com.forsaken.ecommerce.customer.service;
 import com.forsaken.ecommerce.common.exceptions.CustomerNotFoundExceptions;
 import com.forsaken.ecommerce.customer.dto.CustomerRequest;
 import com.forsaken.ecommerce.customer.dto.CustomerResponse;
+import com.forsaken.ecommerce.customer.dto.PagedResponse;
 
-import java.util.List;
 
 public interface ICustomerService {
 
@@ -25,11 +25,12 @@ public interface ICustomerService {
     String updateCustomer(final CustomerRequest request) throws CustomerNotFoundExceptions;
 
     /**
-     * this service fetches list of all customers present in database.
-     *
-     * @return List<CustomerResponse> - list of all customers present in database
+     * this service fetches page of all customers present in database.
+     * @param page -
+     * @param size
+     * @return PagedResponse<CustomerResponse> - page of all customers present in database
      */
-    List<CustomerResponse> findAllCustomers();
+    PagedResponse<CustomerResponse> findAllCustomers(final int page, final int size);
 
     /**
      * this service fetches customer data for the customerId from database.

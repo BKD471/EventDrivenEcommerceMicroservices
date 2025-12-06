@@ -4,12 +4,15 @@ package com.forsaken.ecommerce.customer.service;
 import com.forsaken.ecommerce.common.exceptions.CustomerNotFoundExceptions;
 import com.forsaken.ecommerce.customer.dto.CustomerRequest;
 import com.forsaken.ecommerce.customer.dto.CustomerResponse;
+import com.forsaken.ecommerce.customer.dto.PagedResponse;
 import com.forsaken.ecommerce.customer.model.Address;
 import com.forsaken.ecommerce.customer.model.Customer;
 import com.forsaken.ecommerce.customer.repository.CustomerRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -143,24 +146,85 @@ class CustomerServiceImplTest {
     }
 
 
+
     @Test
-    void findAllCustomers_ShouldReturnMappedResponses() {
+    void findAllCustomers_WithPagination_ReturnsPagedResponse() {
         // Given
+        int page = 1;
+        int size = 2;
+
         final Customer existingCustomerOne =
                 constructCustomer("cust_123", "test-user-firstname-123",
                         "test-user-lastname-123", "abc@gmail.com");
         final Customer existingCustomerTwo = constructCustomer("cust_456", "test-user-firstname-456",
                 "test-user-lastname-456", "xyz@gmail.com");
+        final Customer existingCustomerThree = constructCustomer("cust_789", "test-user-firstname-789",
+                "test-user-lastname-789", "klm@gmail.com");
 
+        when(customerRepository.findAll()).thenReturn(List.of(existingCustomerOne, existingCustomerTwo, existingCustomerThree));
+
+        CustomerResponse customerResponseOne = existingCustomerOne.fromCustomer();
+        CustomerResponse customerResponseTwo = existingCustomerTwo.fromCustomer();
+
+        // When
+        PagedResponse<CustomerResponse> result = customerService.findAllCustomers(page, size);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(page, result.page());
+        assertEquals(size, result.size());
+        assertEquals(3, result.totalElements());
+        assertEquals(2, result.totalPages());  // 3 elements / size 2 = 2 pages
+        assertEquals(List.of(customerResponseOne, customerResponseTwo), result.content());
+        verify(customerRepository, times(1)).findAll();
+    }
+
+    // Test for out of range page
+    @Test
+    void findAllCustomers_PageOutOfRange_ReturnsEmptyContent() {
+        // Given
+        final int page = 10;
+        final int size = 2;
+
+        final Customer existingCustomerOne =
+                constructCustomer("cust_123", "test-user-firstname-123",
+                        "test-user-lastname-123", "abc@gmail.com");
+        final Customer existingCustomerTwo = constructCustomer("cust_456", "test-user-firstname-456",
+                "test-user-lastname-456", "xyz@gmail.com");
+        when(customerRepository.findAll()).thenReturn(List.of(existingCustomerOne, existingCustomerTwo));
+
+        // When
+        PagedResponse<CustomerResponse> result = customerService.findAllCustomers(page, size);
+
+        // Then
+        assertEquals(page, result.page());
+        assertEquals(2, result.totalElements());
+        assertEquals(1, result.totalPages());
+        assertTrue(result.content().isEmpty());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, -1, -2, -3, -4, -5})
+    void findAllCustomers_InvalidOrNegativePage_AlwaysUsesPage1(int page) {
+        // Given
+        final int size = 2;
+        final Customer existingCustomerOne =
+                constructCustomer("cust_123", "test-user-firstname-123",
+                        "test-user-lastname-123", "abc@gmail.com");
+        final Customer existingCustomerTwo = constructCustomer("cust_456", "test-user-firstname-456",
+                "test-user-lastname-456", "xyz@gmail.com");
         when(customerRepository.findAll()).thenReturn(List.of(existingCustomerOne, existingCustomerTwo));
         final CustomerResponse customerResponseOne = existingCustomerOne.fromCustomer();
         final CustomerResponse customerResponseTwo = existingCustomerTwo.fromCustomer();
 
         // When
-        List<CustomerResponse> actual = customerService.findAllCustomers();
+        PagedResponse<CustomerResponse> result = customerService.findAllCustomers(page, size);
 
         // Then
-        assertEquals(List.of(customerResponseOne, customerResponseTwo), actual);
+        assertEquals(1, result.page(), "Page should always normalize to 1 for invalid values");
+        assertEquals(List.of(customerResponseOne, customerResponseTwo), result.content());
+        assertEquals(2, result.totalElements());
+        assertEquals(1, result.totalPages());
     }
 
 

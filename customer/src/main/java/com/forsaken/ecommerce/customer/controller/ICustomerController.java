@@ -3,6 +3,8 @@ package com.forsaken.ecommerce.customer.controller;
 import com.forsaken.ecommerce.common.exceptions.CustomerNotFoundExceptions;
 import com.forsaken.ecommerce.common.responses.ApiResponse;
 import com.forsaken.ecommerce.customer.dto.CustomerRequest;
+import com.forsaken.ecommerce.customer.dto.CustomerResponse;
+import com.forsaken.ecommerce.customer.dto.PagedResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 
 @RequestMapping("/api/v1/customers")
@@ -25,7 +28,7 @@ public interface ICustomerController {
      * @return ApiResponse<String> - acknowledgment that customer has been created with status code.
      */
     @PostMapping("/create")
-    ResponseEntity<ApiResponse<?>> createCustomer(
+    ResponseEntity<ApiResponse<String>> createCustomer(
             @RequestBody @Valid final CustomerRequest request
     ) throws CustomerNotFoundExceptions;
 
@@ -36,17 +39,22 @@ public interface ICustomerController {
      * @return ApiResponse<String> - acknowledgment that customer data has been updated with status code.
      */
     @PutMapping
-    ResponseEntity<ApiResponse<?>> updateCustomer(
+    ResponseEntity<ApiResponse<String>> updateCustomer(
             @RequestBody @Valid final CustomerRequest request
     ) throws CustomerNotFoundExceptions;
 
     /**
-     * this service fetches list of all customers present in database.
+     * this service fetches page of all customers present in database.
+     * @param page       - index of page starts from 1
+     * @param size       - no of elements per each page
      *
-     * @return ApiResponse<List<CustomerResponse>> - list of all customers present in database with status code.
+     * @return ApiResponse<PagedResponse<CustomerResponse>>> - page of all customers present in database with status code.
      */
     @GetMapping
-    ResponseEntity<ApiResponse<?>> findAll();
+    ResponseEntity<ApiResponse<PagedResponse<CustomerResponse>>> findAll(
+            @RequestParam(name = "page", defaultValue = "1") final int page,
+            @RequestParam(name = "size", defaultValue = "3") final int size
+    );
 
     /**
      * this service checks whether customer exist in database or not.
@@ -55,7 +63,7 @@ public interface ICustomerController {
      * @return ApiResponse<Boolean> - acknowledgment that customer exists in database with status code.
      */
     @GetMapping("/exists/{customer-id}")
-    ResponseEntity<ApiResponse<?>> existsById(
+    ResponseEntity<ApiResponse<Boolean>> existsById(
             @PathVariable("customer-id") @NotBlank final String customerId
     );
 
@@ -66,7 +74,7 @@ public interface ICustomerController {
      * @return ApiResponse<CustomerResponse> - customer data for the id - customerId with status code.
      */
     @GetMapping("/{customer-id}")
-    ResponseEntity<ApiResponse<?>> findById(
+    ResponseEntity<ApiResponse<CustomerResponse>> findById(
             @PathVariable("customer-id") @NotBlank final String customerId
     ) throws CustomerNotFoundExceptions;
 
@@ -77,7 +85,7 @@ public interface ICustomerController {
      * @return ApiResponse<CustomerResponse> - customer data for the emailId - customerEmail with status code.
      */
     @GetMapping("/{customer-email}")
-    ResponseEntity<ApiResponse<?>> findByEmail(
+    ResponseEntity<ApiResponse<CustomerResponse>> findByEmail(
             @PathVariable("customer-email") @NotBlank final String customerEmail
     ) throws CustomerNotFoundExceptions;
 
@@ -88,7 +96,7 @@ public interface ICustomerController {
      * @return ApiResponse<String> - acknowledgment that customer has been deleted from database with status code.
      */
     @DeleteMapping("/{customer-id}")
-    ResponseEntity<ApiResponse<?>> delete(
+    ResponseEntity<ApiResponse<String>> delete(
             @PathVariable("customer-id") @NotBlank final String customerId
     );
 }
