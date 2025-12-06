@@ -2,8 +2,11 @@ package com.forsaken.ecommerce.product.controller;
 
 import com.forsaken.ecommerce.common.exceptions.ProductNotFoundExceptions;
 import com.forsaken.ecommerce.common.responses.ApiResponse;
+import com.forsaken.ecommerce.product.dto.PagedResponse;
 import com.forsaken.ecommerce.product.dto.ProductPurchaseRequest;
+import com.forsaken.ecommerce.product.dto.ProductPurchaseResponse;
 import com.forsaken.ecommerce.product.dto.ProductRequest;
+import com.forsaken.ecommerce.product.dto.ProductResponse;
 import com.forsaken.ecommerce.product.exceptions.CategoryNotFoundExceptions;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -21,6 +24,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import static com.forsaken.ecommerce.product.dto.ProductRequest.Direction;
 
@@ -36,7 +40,7 @@ public interface IProductController {
      * @return ApiResponse<?> - acknowledgment that presigned url has been generated with status code.
      */
     @GetMapping("/presigned-url")
-    ResponseEntity<ApiResponse<?>> getPresignedUrl(
+    ResponseEntity<ApiResponse<Map<String, String>>> getPresignedUrl(
             @RequestParam(name = "fileName") @NotBlank final String fileName,
             @RequestParam(name = "contentType") @NotBlank final String contentType
     );
@@ -49,7 +53,7 @@ public interface IProductController {
      * @return ApiResponse<?> - acknowledgment that product has been created in database with status code.
      */
     @PostMapping(value = "/create")
-    ResponseEntity<ApiResponse<?>> createProduct(
+    ResponseEntity<ApiResponse<Integer>> createProduct(
             @RequestBody @Valid final ProductRequest productRequest) throws IOException;
 
 
@@ -60,7 +64,7 @@ public interface IProductController {
      * @return ApiResponse<?> - url to download file from S3.
      */
     @GetMapping("/download-url")
-    ResponseEntity<ApiResponse<?>> getDownloadUrl(@NotBlank @RequestParam(name = "key") final String key);
+    ResponseEntity<ApiResponse<String>> getDownloadUrl(@NotBlank @RequestParam(name = "key") final String key);
 
 
     /**
@@ -72,7 +76,7 @@ public interface IProductController {
      * @return ApiResponse<?> - acknowledgment that product has been purchased from database with status code.
      */
     @PostMapping("/purchase")
-    ResponseEntity<ApiResponse<?>> purchaseProducts(
+    ResponseEntity<ApiResponse<PagedResponse<ProductPurchaseResponse>>> purchaseProducts(
             @RequestBody @Valid final List<ProductPurchaseRequest> request,
             @RequestParam(name = "page", defaultValue = "1") final int page,
             @RequestParam(name = "size", defaultValue = "3") final int size
@@ -87,10 +91,10 @@ public interface IProductController {
      * @return ApiResponse<?>   - product information with status code.
      */
     @GetMapping("/{product-id}")
-    ResponseEntity<ApiResponse<?>> findById(
+    ResponseEntity<ApiResponse<ProductResponse>> findById(
             @PathVariable("product-id") @NotNull final Integer productId,
             @RequestParam(name = "signedUrl", defaultValue = "True") final Boolean signedUrl
-    );
+    ) throws ProductNotFoundExceptions;
 
 
     /**
@@ -102,7 +106,7 @@ public interface IProductController {
      * @return ApiResponse<?> - page of all product information with status code.
      */
     @GetMapping
-    ResponseEntity<ApiResponse<?>> findAll(
+    ResponseEntity<ApiResponse<PagedResponse<ProductResponse>>> findAll(
             @RequestParam(name = "signedUrl", defaultValue = "True") final Boolean signedUrl,
             @RequestParam(name = "page", defaultValue = "1") final int page,
             @RequestParam(name = "size", defaultValue = "3") final int size
@@ -119,7 +123,7 @@ public interface IProductController {
      * @return ApiResponse<?> - page of all product information with status code.
      */
     @GetMapping("/findAll")
-    ResponseEntity<ApiResponse<?>> findAllProducts(
+    ResponseEntity<ApiResponse<PagedResponse<ProductResponse>>> findAllProducts(
             @RequestParam(name = "fromDate", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) final LocalDateTime fromDate,
 
@@ -142,7 +146,7 @@ public interface IProductController {
      * @return ApiResponse<?> - page of all product information that falls under this category and has price limit with status code.
      */
     @GetMapping("/category/{categoryId}")
-    ResponseEntity<ApiResponse<?>> findAllProductsByCategory(
+    ResponseEntity<ApiResponse<PagedResponse<ProductResponse>>> findAllProductsByCategory(
             @PathVariable("categoryId") @NotNull final Integer categoryId,
             @RequestParam(value = "price", defaultValue = "100") final BigDecimal price,
             @RequestParam(value = "direction", defaultValue = "GE") final Direction direction,

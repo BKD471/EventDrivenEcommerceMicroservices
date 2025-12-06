@@ -12,12 +12,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 import static com.forsaken.ecommerce.product.dto.ProductRequest.Direction;
 
 public interface IProductService {
-
 
     /**
      * this service creates Product in database.
@@ -46,12 +44,12 @@ public interface IProductService {
      *
      * @param id        - productId
      * @param signedUrl - is signedUrl or not for viewing/downloading product image
-     * @return Optional<ProductResponse>  - product information from database.
+     * @return ProductResponse  - product information from database.
      */
-    Optional<ProductResponse> getProductById(
+    ProductResponse getProductById(
             final Integer id,
             final boolean signedUrl
-    );
+    ) throws ProductNotFoundExceptions;
 
 
     /**

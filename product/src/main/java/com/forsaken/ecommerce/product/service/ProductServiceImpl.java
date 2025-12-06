@@ -11,7 +11,6 @@ import com.forsaken.ecommerce.product.model.Category;
 import com.forsaken.ecommerce.product.model.Product;
 import com.forsaken.ecommerce.product.repository.ICategoryRepository;
 import com.forsaken.ecommerce.product.repository.IProductRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -72,15 +71,16 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
-    public Optional<ProductResponse> getProductById(final Integer id, final boolean signedUrl) {
+    public ProductResponse getProductById(final Integer id, final boolean signedUrl) throws ProductNotFoundExceptions {
         log.info("Received request to get product by ID {}", id);
         final Optional<Product> productOpt = repository.findById(id);
         if (productOpt.isPresent() && signedUrl) {
             Product p = productOpt.get();
             p.setImageUrl(s3Service.generatePresignedDownloadUrl(p.getImageUrl()));
         }
-        return Optional.ofNullable(productOpt.map(Product::toProductResponse)
-                .orElseThrow(() -> new EntityNotFoundException("Product not found with ID:: " + id)));
+        return productOpt.map(Product::toProductResponse)
+                .orElseThrow(() -> new ProductNotFoundExceptions("Product not found with ID:: " + id,
+                        "getProductById(final Integer id, final boolean signedUrl) in " + className));
     }
 
     @Override
