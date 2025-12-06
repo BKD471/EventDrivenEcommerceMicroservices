@@ -1,18 +1,20 @@
 package com.forsaken.ecommerce.product.service;
 
 import com.forsaken.ecommerce.common.exceptions.ProductNotFoundExceptions;
-import com.forsaken.ecommerce.product.dto.Direction;
+import com.forsaken.ecommerce.product.dto.PagedResponse;
 import com.forsaken.ecommerce.product.dto.ProductPurchaseRequest;
 import com.forsaken.ecommerce.product.dto.ProductPurchaseResponse;
 import com.forsaken.ecommerce.product.dto.ProductRequest;
 import com.forsaken.ecommerce.product.dto.ProductResponse;
-import com.forsaken.ecommerce.product.model.Category;
+import com.forsaken.ecommerce.product.exceptions.CategoryNotFoundExceptions;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+
+import static com.forsaken.ecommerce.product.dto.ProductRequest.Direction;
 
 public interface IProductService {
 
@@ -29,17 +31,21 @@ public interface IProductService {
     /**
      * this service fetches all Products from database.
      *
-     * @param signedUrls              - is SignedUrl or not.
-     * @return List<ProductResponse>  - list of products from database.
+     * @param signedUrls - is signedUrl or not for viewing/downloading product image
+     * @return PagedResponse<ProductResponse>  - page of products from database.
      */
-    List<ProductResponse> getAllProducts(final Boolean signedUrls);
+    PagedResponse<ProductResponse> getAllProducts(
+            final Boolean signedUrls,
+            final int page,
+            final int size
+    );
 
 
     /**
      * this service fetches Product by id from database.
      *
-     * @param id              - productId
-     * @param signedUrl       - is SignedUrl or not.
+     * @param id        - productId
+     * @param signedUrl - is signedUrl or not for viewing/downloading product image
      * @return Optional<ProductResponse>  - product information from database.
      */
     Optional<ProductResponse> getProductById(
@@ -51,38 +57,48 @@ public interface IProductService {
     /**
      * this service purchases products from database.
      *
-     * @param request                         - request to purchase Product
-     * @return List<ProductPurchaseResponse>  - product information from database.
+     * @param request - request to purchase Product
+     * @return PagedResponse<ProductPurchaseResponse>  - page of all product purchase information from database.
      */
     @Transactional(rollbackFor = ProductNotFoundExceptions.class)
-    List<ProductPurchaseResponse> purchaseProducts(
-            final List<ProductPurchaseRequest> request
+    PagedResponse<ProductPurchaseResponse> purchaseProducts(
+            final List<ProductPurchaseRequest> request,
+            final int page,
+            final int size
     ) throws ProductNotFoundExceptions;
 
 
     /**
      * this service fetches products from database that was created between fromDate and toDate.
      *
-     * @param fromDate                - fromDate where from search begins
-     * @param toDate                  - fromDate where from search begins
-     * @return List<ProductResponse>  - list of product information from database.
+     * @param fromDate - fromDate where from search begins
+     * @param toDate   - fromDate where from search begins
+     * @param page     - index of page starts from 1
+     * @param size     - no of elements per each page
+     * @return PagedResponse<ProductResponse>  - page of all product information from database.
      */
-    List<ProductResponse> findAllProducts(
+    PagedResponse<ProductResponse> findAllProducts(
             final LocalDateTime fromDate,
-            final LocalDateTime toDate
+            final LocalDateTime toDate,
+            final int page,
+            final int size
     );
 
     /**
      * this service fetches products from database by category with price either less than equals or greater than equals.
      *
-     * @param category                - category to filter
-     * @param price                   - price to filter
-     * @param direction               - whether pricing is less than equals or greater than equals
-     * @return List<ProductResponse>  - list of product information from database.
+     * @param categoryId - id of category of that product client needs
+     * @param price      - price limit to which we search
+     * @param direction  - direction of search, either less than equals price or greater than equals price
+     * @param page       - index of page starts from 1
+     * @param size       - no of elements per each page
+     * @return List<ProductResponse>  - page of all product information that falls under this category and has price limit.
      */
-    List<ProductResponse> findAllProductsByCategory(
-            final Category category,
+    PagedResponse<ProductResponse> findAllProductsByCategory(
+            final Integer categoryId,
             final BigDecimal price,
-            final Direction direction
-    );
+            final Direction direction,
+            final int page,
+            final int size
+    ) throws CategoryNotFoundExceptions;
 }

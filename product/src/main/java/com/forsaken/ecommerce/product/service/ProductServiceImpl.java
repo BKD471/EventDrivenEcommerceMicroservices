@@ -1,17 +1,22 @@
 package com.forsaken.ecommerce.product.service;
 
 import com.forsaken.ecommerce.common.exceptions.ProductNotFoundExceptions;
-import com.forsaken.ecommerce.product.dto.Direction;
+import com.forsaken.ecommerce.product.dto.PagedResponse;
 import com.forsaken.ecommerce.product.dto.ProductPurchaseRequest;
 import com.forsaken.ecommerce.product.dto.ProductPurchaseResponse;
 import com.forsaken.ecommerce.product.dto.ProductRequest;
 import com.forsaken.ecommerce.product.dto.ProductResponse;
+import com.forsaken.ecommerce.product.exceptions.CategoryNotFoundExceptions;
 import com.forsaken.ecommerce.product.model.Category;
 import com.forsaken.ecommerce.product.model.Product;
+import com.forsaken.ecommerce.product.repository.ICategoryRepository;
 import com.forsaken.ecommerce.product.repository.IProductRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -22,6 +27,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.forsaken.ecommerce.product.dto.ProductRequest.Direction;
+import static com.forsaken.ecommerce.product.dto.ProductRequest.Direction.GE;
+
 
 @Service
 @Slf4j
@@ -29,6 +37,7 @@ import java.util.stream.Collectors;
 public class ProductServiceImpl implements IProductService {
 
     private final IProductRepository repository;
+    private final ICategoryRepository categoryRepository;
     private final IS3Service s3Service;
     private final Class<?> className = ProductServiceImpl.class;
 
@@ -40,11 +49,26 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
-    public List<ProductResponse> getAllProducts(final Boolean signedUrls) {
-        log.info("Received request to get all products {}", signedUrls);
-        final List<Product> products = repository.findAllWithCategory();
-        if (signedUrls) products.forEach(p -> p.setImageUrl(s3Service.generatePresignedDownloadUrl(p.getImageUrl())));
-        return products.stream().map(Product::toProductResponse).collect(Collectors.toList());
+    public PagedResponse<ProductResponse> getAllProducts(final Boolean signedUrls, final int page, final int size) {
+        final Pageable pageable = PageRequest.of(page <= 1 ? 0 : page - 1, size);
+        final Page<Product> productPage = repository.findAllWithCategory(pageable);
+
+
+        if (signedUrls && productPage.hasContent())
+            productPage.forEach(p -> p.setImageUrl(s3Service.generatePresignedDownloadUrl(p.getImageUrl())));
+
+        final List<ProductResponse> content = productPage.getContent()
+                .stream()
+                .map(Product::toProductResponse)
+                .toList();
+
+        return PagedResponse.<ProductResponse>builder()
+                .content(content)
+                .page(productPage.getNumber() + 1)
+                .size(productPage.getSize())
+                .totalElements(productPage.getTotalElements())
+                .totalPages(productPage.getTotalPages())
+                .build();
     }
 
     @Override
@@ -60,7 +84,12 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
-    public List<ProductPurchaseResponse> purchaseProducts(final List<ProductPurchaseRequest> request) throws ProductNotFoundExceptions {
+    public PagedResponse<ProductPurchaseResponse> purchaseProducts(
+            final List<ProductPurchaseRequest> request,
+            final int page,
+            final int size
+    ) throws ProductNotFoundExceptions {
+
         log.info("Received request to purchase products {}", request);
         final var productIds = request
                 .stream()
@@ -88,25 +117,93 @@ public class ProductServiceImpl implements IProductService {
             repository.save(product);
             purchasedProducts.add(product.toproductPurchaseResponse(productRequest.quantity()));
         }
-        return purchasedProducts;
+
+        final int finalPage = Math.max(page - 1, 0);
+        final int start = finalPage * size;
+        final int end = Math.min(start + size, purchasedProducts.size());
+
+        final List<ProductPurchaseResponse> pagedContent =
+                (start >= purchasedProducts.size()) ? List.of() : purchasedProducts.subList(start, end);
+        final int totalPages = (int) Math.ceil((double) purchasedProducts.size() / size);
+        return PagedResponse.<ProductPurchaseResponse>builder()
+                .content(pagedContent)
+                .page(finalPage + 1)
+                .size(size)
+                .totalElements(purchasedProducts.size())
+                .totalPages(totalPages)
+                .build();
     }
 
     @Override
-    public List<ProductResponse> findAllProducts(LocalDateTime fromDate, LocalDateTime toDate) {
-        log.info("Received request to get all products by date {}", fromDate);
-        return repository.findAllByAdditionDateBetween(fromDate, toDate)
-                .stream().map(Product::toProductResponse).collect(Collectors.toList());
+    public PagedResponse<ProductResponse> findAllProducts(LocalDateTime fromDate,
+                                                          LocalDateTime toDate,
+                                                          final int page,
+                                                          final int size
+    ) {
+        log.info("Received request to get all products by date {} to {}", fromDate, toDate);
+
+        if (toDate == null) toDate = LocalDateTime.now();
+        if (fromDate == null) fromDate = toDate.minusMonths(6);
+        final List<ProductResponse> responses = repository.findAllByAdditionDateBetween(fromDate, toDate)
+                .stream()
+                .map(Product::toProductResponse)
+                .toList();
+
+        final int finalPage = Math.max(page - 1, 0);
+        final int start = finalPage * size;
+        final int end = Math.min(start + size, responses.size());
+
+        final List<ProductResponse> pagedContent =
+                (start >= responses.size()) ? List.of() : responses.subList(start, end);
+        final int totalPages = (int) Math.ceil((double) responses.size() / size);
+        return PagedResponse.<ProductResponse>builder()
+                .content(pagedContent)
+                .page(finalPage + 1)
+                .size(size)
+                .totalElements(responses.size())
+                .totalPages(totalPages)
+                .build();
     }
 
     @Override
-    public List<ProductResponse> findAllProductsByCategory(Category category, BigDecimal price, Direction direction) {
-        log.info("Received request to get all products by category {}", category);
-        if (Direction.GE.equals(direction)) {
-            return repository.findAllByCategoryAndPriceGreaterThanEqual(category, price)
+    public PagedResponse<ProductResponse> findAllProductsByCategory(
+            final Integer categoryId,
+            final BigDecimal price,
+            final Direction direction,
+            int page,
+            int size) throws CategoryNotFoundExceptions {
+        log.info("Received request to get all products by category {}", categoryId);
+
+        final Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(
+                        () -> new CategoryNotFoundExceptions(
+                                "No Category found with ID: " + categoryId,
+                                "findAllProductsByCategory(Integer categoryId,BigDecimal price," +
+                                        "Direction direction,int page,int size) in " + className)
+                );
+
+        List<ProductResponse> products = null;
+        if (GE.equals(direction)) {
+            products = repository.findAllByCategoryAndPriceGreaterThanEqual(category, price)
                     .stream().map(Product::toProductResponse).collect(Collectors.toList());
         } else {
-            return repository.findAllByCategoryAndPriceLessThanEqual(category, price)
+            products = repository.findAllByCategoryAndPriceLessThanEqual(category, price)
                     .stream().map(Product::toProductResponse).collect(Collectors.toList());
         }
+
+        final int finalPage = Math.max(page - 1, 0);
+        final int start = finalPage * size;
+        final int end = Math.min(start + size, products.size());
+
+        final List<ProductResponse> pagedContent =
+                (start >= products.size()) ? List.of() : products.subList(start, end);
+        final int totalPages = (int) Math.ceil((double) products.size() / size);
+        return PagedResponse.<ProductResponse>builder()
+                .content(pagedContent)
+                .page(finalPage + 1)
+                .size(size)
+                .totalElements(products.size())
+                .totalPages(totalPages)
+                .build();
     }
 }

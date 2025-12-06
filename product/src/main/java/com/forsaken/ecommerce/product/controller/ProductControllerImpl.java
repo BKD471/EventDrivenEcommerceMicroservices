@@ -2,10 +2,9 @@ package com.forsaken.ecommerce.product.controller;
 
 import com.forsaken.ecommerce.common.exceptions.ProductNotFoundExceptions;
 import com.forsaken.ecommerce.common.responses.ApiResponse;
-import com.forsaken.ecommerce.product.dto.Direction;
 import com.forsaken.ecommerce.product.dto.ProductPurchaseRequest;
 import com.forsaken.ecommerce.product.dto.ProductRequest;
-import com.forsaken.ecommerce.product.model.Category;
+import com.forsaken.ecommerce.product.exceptions.CategoryNotFoundExceptions;
 import com.forsaken.ecommerce.product.service.IProductService;
 import com.forsaken.ecommerce.product.service.IS3Service;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +16,8 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import static com.forsaken.ecommerce.product.dto.ProductRequest.Direction;
 
 @RestController
 @RequiredArgsConstructor
@@ -62,12 +63,16 @@ public class ProductControllerImpl implements IProductController {
     }
 
     @Override
-    public ResponseEntity<ApiResponse<?>> purchaseProducts(final List<ProductPurchaseRequest> request) throws ProductNotFoundExceptions {
+    public ResponseEntity<ApiResponse<?>> purchaseProducts(
+            final List<ProductPurchaseRequest> request,
+            final int page,
+            final int size
+    ) throws ProductNotFoundExceptions {
         return ResponseEntity.status(HttpStatus.ACCEPTED)
                 .body(
                         ApiResponse.builder()
                                 .status(ApiResponse.Status.SUCCESS)
-                                .data(service.purchaseProducts(request))
+                                .data(service.purchaseProducts(request, page, size))
                                 .message("Product Purchased.")
                                 .build()
                 );
@@ -79,34 +84,35 @@ public class ProductControllerImpl implements IProductController {
                 .body(
                         ApiResponse.builder()
                                 .status(ApiResponse.Status.SUCCESS)
-                                .data(service.getProductById(productId,signedUrl))
+                                .data(service.getProductById(productId, signedUrl))
                                 .message("Product Found with Id: " + productId)
                                 .build()
                 );
     }
 
     @Override
-    public ResponseEntity<ApiResponse<?>> findAll(final Boolean signedUrl) {
+    public ResponseEntity<ApiResponse<?>> findAll(final Boolean signedUrl, final int page, final int size) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(
                         ApiResponse.builder()
                                 .status(ApiResponse.Status.SUCCESS)
-                                .data(service.getAllProducts(signedUrl))
+                                .data(service.getAllProducts(signedUrl, page, size))
                                 .message("Fetched All Products Information.")
                                 .build()
                 );
     }
 
     @Override
-    public ResponseEntity<ApiResponse<?>> findAllProducts(LocalDateTime fromDate, LocalDateTime toDate) {
-        if (toDate == null) toDate = LocalDateTime.now();
-        if (fromDate == null) fromDate = toDate.minusMonths(6);
-
+    public ResponseEntity<ApiResponse<?>> findAllProducts(final LocalDateTime fromDate,
+                                                          final LocalDateTime toDate,
+                                                          final int page,
+                                                          final int size
+    ) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(
                         ApiResponse.builder()
                                 .status(ApiResponse.Status.SUCCESS)
-                                .data(service.findAllProducts(fromDate, toDate))
+                                .data(service.findAllProducts(fromDate, toDate, page, size))
                                 .message("Fetched All Products Information created between fromDate to toDate.")
                                 .build()
                 );
@@ -114,15 +120,17 @@ public class ProductControllerImpl implements IProductController {
 
     @Override
     public ResponseEntity<ApiResponse<?>> findAllProductsByCategory(
-            final Category category,
+            final Integer categoryId,
             final BigDecimal price,
-            final Direction direction
-    ) {
+            final Direction direction,
+            final int page,
+            final int size
+    ) throws CategoryNotFoundExceptions {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(
                         ApiResponse.builder()
                                 .status(ApiResponse.Status.SUCCESS)
-                                .data(service.findAllProductsByCategory(category, price, direction))
+                                .data(service.findAllProductsByCategory(categoryId, price, direction, page, size))
                                 .message("Fetched All Products By Category:category.")
                                 .build()
                 );
