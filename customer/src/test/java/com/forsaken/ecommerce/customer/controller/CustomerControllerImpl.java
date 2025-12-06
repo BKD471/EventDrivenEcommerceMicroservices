@@ -5,6 +5,7 @@ import com.forsaken.ecommerce.common.exceptions.CustomerNotFoundExceptions;
 import com.forsaken.ecommerce.common.responses.ApiResponse;
 import com.forsaken.ecommerce.customer.dto.CustomerRequest;
 import com.forsaken.ecommerce.customer.dto.CustomerResponse;
+import com.forsaken.ecommerce.customer.dto.PagedResponse;
 import com.forsaken.ecommerce.customer.model.Address;
 import com.forsaken.ecommerce.customer.service.ICustomerService;
 import org.junit.jupiter.api.Test;
@@ -47,7 +48,7 @@ class CustomerControllerImplTest {
         when(customerService.createCustomer(request)).thenReturn(serviceResponse);
 
         // When
-        final ResponseEntity<ApiResponse<?>> resp = controller.createCustomer(request);
+        final ResponseEntity<ApiResponse<String>> resp = controller.createCustomer(request);
 
         // Then
         assertEquals(HttpStatus.CREATED, resp.getStatusCode());
@@ -68,7 +69,7 @@ class CustomerControllerImplTest {
         when(customerService.updateCustomer(request)).thenReturn(serviceResponse);
 
         // When
-        final ResponseEntity<ApiResponse<?>> resp = controller.updateCustomer(request);
+        final ResponseEntity<ApiResponse<String>> resp = controller.updateCustomer(request);
 
         // Then
         assertEquals(HttpStatus.ACCEPTED, resp.getStatusCode());
@@ -81,22 +82,37 @@ class CustomerControllerImplTest {
     }
 
     @Test
-    void findAll_ReturnsList() {
+    void findAll_WithPagination_ReturnsPagedResponse() {
         // Given
-        final List<CustomerResponse> serviceData = List.of(constructCustomerResponse(), constructCustomerResponse());
-        when(customerService.findAllCustomers()).thenReturn(serviceData);
+        int page = 1;
+        int size = 3;
+
+        CustomerResponse customer1 = constructCustomerResponse();
+        CustomerResponse customer2 = constructCustomerResponse();
+
+        PagedResponse<CustomerResponse> pagedResponse = PagedResponse.<CustomerResponse>builder()
+                .content(List.of(customer1, customer2))
+                .page(page)
+                .size(size)
+                .totalElements(2)
+                .totalPages(1)
+                .build();
+
+        when(customerService.findAllCustomers(page, size))
+                .thenReturn(pagedResponse);
 
         // When
-        final ResponseEntity<ApiResponse<?>> resp = controller.findAll();
+        ResponseEntity<ApiResponse<PagedResponse<CustomerResponse>>> resp =
+                controller.findAll(page, size);
 
         // Then
         assertEquals(HttpStatus.OK, resp.getStatusCode());
-        final ApiResponse<?> body = resp.getBody();
+        ApiResponse<PagedResponse<CustomerResponse>> body = resp.getBody();
         assertNotNull(body);
         assertEquals(ApiResponse.Status.SUCCESS, body.status());
         assertEquals("All Customers Data Fetched", body.message());
-        assertEquals(serviceData, body.data());
-        verify(customerService, times(1)).findAllCustomers();
+        assertEquals(pagedResponse, body.data());
+        verify(customerService, times(1)).findAllCustomers(page, size);
     }
 
     @Test
@@ -105,7 +121,7 @@ class CustomerControllerImplTest {
         when(customerService.existsById(CUSTOMER_ID)).thenReturn(true);
 
         // When
-        final ResponseEntity<ApiResponse<?>> resp = controller.existsById(CUSTOMER_ID);
+        final ResponseEntity<ApiResponse<Boolean>> resp = controller.existsById(CUSTOMER_ID);
 
         // Then
         assertEquals(HttpStatus.OK, resp.getStatusCode());
@@ -123,7 +139,7 @@ class CustomerControllerImplTest {
         when(customerService.existsById(CUSTOMER_ID)).thenReturn(false);
 
         // When
-        final ResponseEntity<ApiResponse<?>> resp = controller.existsById(CUSTOMER_ID);
+        final ResponseEntity<ApiResponse<Boolean>> resp = controller.existsById(CUSTOMER_ID);
 
         // Then
         assertEquals(HttpStatus.OK, resp.getStatusCode());
@@ -142,7 +158,7 @@ class CustomerControllerImplTest {
         when(customerService.findById(CUSTOMER_ID)).thenReturn(serviceResult);
 
         // When
-        final ResponseEntity<ApiResponse<?>> resp = controller.findById(CUSTOMER_ID);
+        final ResponseEntity<ApiResponse<CustomerResponse>> resp = controller.findById(CUSTOMER_ID);
 
         // Then
         assertEquals(HttpStatus.OK, resp.getStatusCode());
@@ -171,7 +187,7 @@ class CustomerControllerImplTest {
         when(customerService.findByEmail(CUSTOMER_EMAIL)).thenReturn(serviceResult);
 
         // When
-        final ResponseEntity<ApiResponse<?>> resp = controller.findByEmail(CUSTOMER_EMAIL);
+        final ResponseEntity<ApiResponse<CustomerResponse>> resp = controller.findByEmail(CUSTOMER_EMAIL);
 
         // Then
         assertEquals(HttpStatus.OK, resp.getStatusCode());
@@ -190,7 +206,7 @@ class CustomerControllerImplTest {
         when(customerService.deleteCustomer(CUSTOMER_ID)).thenReturn(deleteResult);
 
         // When
-        final ResponseEntity<ApiResponse<?>> resp = controller.delete(CUSTOMER_ID);
+        final ResponseEntity<ApiResponse<String>> resp = controller.delete(CUSTOMER_ID);
 
         // Then
         assertEquals(HttpStatus.OK, resp.getStatusCode());
