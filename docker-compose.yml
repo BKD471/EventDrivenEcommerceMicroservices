@@ -237,6 +237,66 @@ services:
     volumes:
       - redisinsight_data:/data
 
+  axonserver-node1:
+    image: axoniq/axonserver:latest
+    container_name: axonserver-node1
+    hostname: axonserver-node1
+    environment:
+      AXONSERVER_NAME: axonserver-node1
+      AXONSERVER_HOSTNAME: axonserver-node1
+      AXONSERVER_CLUSTER_ENABLED: "true"
+      AXONSERVER_CLUSTER_INTERNAL_HOSTNAME: axonserver-node1
+      AXONSERVER_CLUSTER_PROBE_HOSTNAMES: axonserver-node1,axonserver-node2,axonserver-node3
+      AXONSERVER_CLUSTER_TOKEN: "my-secret-token"
+      AXONSERVER_ACCESSCONTROL: "false"   # set to true + token for secured access
+    ports:
+      - "8024:8024" # dashboard
+      - "8124:8124" # app connection
+    volumes:
+      - axon-node1-data:/data
+      - axon-node1-events:/eventdata
+      - axon-node1-config:/config
+    networks:
+      - microservices-net
+
+  axonserver-node2:
+    image: axoniq/axonserver:latest
+    container_name: axonserver-node2
+    hostname: axonserver-node2
+    environment:
+      AXONSERVER_NAME: axonserver-node2
+      AXONSERVER_HOSTNAME: axonserver-node2
+      AXONSERVER_CLUSTER_ENABLED: "true"
+      AXONSERVER_CLUSTER_INTERNAL_HOSTNAME: axonserver-node2
+      AXONSERVER_CLUSTER_PROBE_HOSTNAMES: axonserver-node1,axonserver-node2,axonserver-node3
+      AXONSERVER_CLUSTER_TOKEN: "my-secret-token"
+      AXONSERVER_ACCESSCONTROL: "false"
+    volumes:
+      - axon-node2-data:/data
+      - axon-node2-events:/eventdata
+      - axon-node2-config:/config
+    networks:
+      - microservices-net
+
+  axonserver-node3:
+    image: axoniq/axonserver:latest
+    container_name: axonserver-node3
+    hostname: axonserver-node3
+    environment:
+      AXONSERVER_NAME: axonserver-node3
+      AXONSERVER_HOSTNAME: axonserver-node3
+      AXONSERVER_CLUSTER_ENABLED: "true"
+      AXONSERVER_CLUSTER_INTERNAL_HOSTNAME: axonserver-node3
+      AXONSERVER_CLUSTER_PROBE_HOSTNAMES: axonserver-node1,axonserver-node2,axonserver-node3
+      AXONSERVER_CLUSTER_TOKEN: "my-secret-token"
+      AXONSERVER_ACCESSCONTROL: "false"
+    volumes:
+      - axon-node3-data:/data
+      - axon-node3-events:/eventdata
+      - axon-node3-config:/config
+    networks:
+        - microservices-net
+
 networks:
   microservices-net:
     driver: bridge
@@ -249,3 +309,12 @@ volumes:
   grafana_data:
   redis_data:
   redisinsight_data:
+  axon-node1-data:
+  axon-node1-events:
+  axon-node1-config:
+  axon-node2-data:
+  axon-node2-events:
+  axon-node2-config:
+  axon-node3-data:
+  axon-node3-events:
+  axon-node3-config:
