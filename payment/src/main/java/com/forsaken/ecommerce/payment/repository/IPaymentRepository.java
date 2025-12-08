@@ -13,25 +13,25 @@ import java.util.List;
 public interface IPaymentRepository extends JpaRepository<Payment, Integer> {
 
     @Query(value = """
-        SELECT p.paymentMethod AS paymentMethod,
-               COUNT(p)        AS count,
-               SUM(p.amount)   AS totalAmount
-        FROM Payment p
-        WHERE (:fromDate IS NULL OR p.createdDate >= :fromDate)
-          AND (:toDate   IS NULL OR p.createdDate <= :toDate)
-        GROUP BY p.paymentMethod
-        ORDER BY p.paymentMethod
-        """,
+    SELECT p.paymentMethod AS paymentMethod,
+           COUNT(p)        AS count,
+           SUM(CAST(p.amount AS DECIMAL))   AS totalAmount
+    FROM Payment p
+    WHERE (:fromDate IS NULL OR p.createdDate >= :fromDate)
+      AND (:toDate   IS NULL OR p.createdDate <= :toDate)
+    GROUP BY p.paymentMethod
+    ORDER BY p.paymentMethod
+    """,
             countQuery = """
-        SELECT COUNT(DISTINCT p.paymentMethod)
-        FROM Payment p
-        WHERE (:fromDate IS NULL OR p.createdDate >= :fromDate)
-          AND (:toDate   IS NULL OR p.createdDate <= :toDate)
-        """)
+    SELECT COUNT(DISTINCT p.paymentMethod)
+    FROM Payment p
+    WHERE (:fromDate IS NULL OR p.createdDate >= :fromDate)
+      AND (:toDate   IS NULL OR p.createdDate <= :toDate)
+    """)
     Page<PaymentSummary> findPaymentSummaryBetween(
-            @Param("fromDate") final LocalDateTime fromDate,
-            @Param("toDate") final LocalDateTime toDate,
-            final Pageable pageable
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate,
+            Pageable pageable
     );
 
     Page<Payment> findAllByCreatedDateBetween(
