@@ -1,0 +1,104 @@
+{
+  "namespace": "com.forsaken.ecommerce.avro",
+  "type": "record",
+  "name": "OrderConfirmation",
+  "fields": [
+    {
+      "name": "orderReference",
+      "type": "string"
+    },
+    {
+      "name": "totalAmount",
+      "type": {
+        "type": "bytes",
+        "logicalType": "decimal",
+        "precision": 18,
+        "scale": 2
+      }
+    },
+    {
+      "name": "paymentMethod",
+      "type": {
+        "type": "enum",
+        "name": "PaymentMethod",
+        "symbols": [
+          "PAYPAL",
+          "CREDIT_CARD",
+          "VISA",
+          "MASTER_CARD",
+          "BITCOIN"
+        ]
+      }
+    },
+    {
+      "name": "customer",
+      "type": {
+        "type": "record",
+        "name": "CustomerResponse",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "firstname",
+            "type": "string"
+          },
+          {
+            "name": "lastname",
+            "type": "string"
+          },
+          {
+            "name": "email",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "products",
+      "type": {
+        "type": "array",
+        "items": {
+          "type": "record",
+          "name": "PurchaseResponse",
+          "fields": [
+            {
+              "name": "productId",
+              "type": "int"
+            },
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "description",
+              "type": "string"
+            },
+            {
+              "name": "price",
+              "type": {
+                "type": "bytes",
+                "logicalType": "decimal",
+                "precision": 18,
+                "scale": 2
+              }
+            },
+            {
+              "name": "quantity",
+              "type": "double"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "traceId",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    }
+  ]
+}

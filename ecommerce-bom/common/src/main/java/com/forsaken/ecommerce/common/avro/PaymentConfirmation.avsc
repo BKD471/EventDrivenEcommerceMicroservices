@@ -1,0 +1,61 @@
+{
+  "namespace": "com.forsaken.ecommerce.avro",
+  "type": "record",
+  "name": "PaymentConfirmation",
+  "fields": [
+    {
+      "name": "orderReference",
+      "type": "string"
+    },
+    {
+      "name": "amount",
+      "type": {
+        "type": "bytes",
+        "logicalType": "decimal",
+        "precision": 18,
+        "scale": 2
+      }
+    },
+    {
+      "name": "paymentMethod",
+      "type": {
+        "type": "enum",
+        "name": "PaymentMethod",
+        "symbols": [
+          "PAYPAL",
+          "CREDIT_CARD",
+          "VISA",
+          "MASTER_CARD",
+          "BITCOIN"
+        ]
+      }
+    },
+    {
+      "name": "customerFirstname",
+      "type": "string"
+    },
+    {
+      "name": "customerLastname",
+      "type": "string"
+    },
+    {
+      "name": "customerEmail",
+      "type": "string"
+    },
+    {
+      "name": "paymentDate",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      }
+    },
+    {
+      "name": "traceId",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    }
+  ]
+}
