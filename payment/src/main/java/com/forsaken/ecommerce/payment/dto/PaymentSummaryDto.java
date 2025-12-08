@@ -9,4 +9,5 @@ public record PaymentSummaryDto(
         PaymentMethod paymentMethod,
         Long count,
         BigDecimal totalAmount
-) implements Serializable {}
+) implements Serializable {
+}

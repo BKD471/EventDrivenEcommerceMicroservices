@@ -31,8 +31,7 @@ public interface IProductController {
      * @param request the payment creation request containing all necessary fields;
      *                must be valid and non-null
      * @return a ResponseEntity containing an ApiResponse wrapping the generated
-     *         payment ID (Integer)
-     *
+     * payment ID (Integer)
      * @throws MethodArgumentNotValidException if the request body fails validation
      */
     @PostMapping
@@ -50,19 +49,16 @@ public interface IProductController {
      * @param fromDate optional start date-time (ISO-8601 format). If null, no lower bound is applied.
      * @param toDate   optional end date-time (ISO-8601 format). If null, no upper bound is applied.
      * @return a ResponseEntity containing an ApiResponse wrapping a list of PaymentSummaryDto objects
-     *         representing summarized payment data.
-     *
+     * representing summarized payment data.
      * @implNote Both dates must be in valid ISO date-time format: yyyy-MM-dd'T'HH:mm:ss.
      */
     @GetMapping("/summary")
     ResponseEntity<ApiResponse<List<PaymentSummaryDto>>> getPaymentSummary(
             @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            final LocalDateTime fromDate,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) final LocalDateTime fromDate,
 
             @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            final LocalDateTime toDate
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) final LocalDateTime toDate
     );
 
     /**
@@ -79,11 +75,9 @@ public interface IProductController {
     @GetMapping("/allPayments")
     ResponseEntity<ApiResponse<List<Payment>>> getAllPayments(
             @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            final LocalDateTime fromDate,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) final LocalDateTime fromDate,
 
             @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            final LocalDateTime toDate
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) final LocalDateTime toDate
     );
 }
