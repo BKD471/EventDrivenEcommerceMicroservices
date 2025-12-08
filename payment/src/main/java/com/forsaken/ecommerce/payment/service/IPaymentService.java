@@ -1,11 +1,11 @@
 package com.forsaken.ecommerce.payment.service;
 
+import com.forsaken.ecommerce.common.responses.PagedResponse;
 import com.forsaken.ecommerce.payment.dto.PaymentRequest;
 import com.forsaken.ecommerce.payment.dto.PaymentSummaryDto;
 import com.forsaken.ecommerce.payment.model.Payment;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 public interface IPaymentService {
 
@@ -26,32 +26,47 @@ public interface IPaymentService {
     Integer createPayment(final PaymentRequest request);
 
     /**
-     * Retrieves summarized payment information within an optional date range.
+     * Retrieves a paginated summary of payments grouped by payment method
+     * for the given date range.
      *
-     * <p>This method aggregates payment data (such as total amount, count, or status-based
-     * summaries) and returns a list of {@link PaymentSummaryDto} objects. If both
-     * <code>fromDate</code> and <code>toDate</code> are provided, only payments created
-     * within that range are included. If either parameter is null, the corresponding
-     * date boundary is not applied.</p>
-     *
-     * @param fromDate the optional start date-time for filtering payments; may be null
-     * @param toDate   the optional end date-time for filtering payments; may be null
-     * @return a list of payment summary DTOs representing aggregated payment results
+     * @param fromDate optional lower bound (inclusive) of the payment creation date/time filter
+     * @param toDate   optional upper bound (inclusive) of the payment creation date/time filter
+     * @param page     zero-based page index
+     * @param size     number of records per page
+     * @return {@link PagedResponse} containing a page of {@link PaymentSummaryDto} items
      */
-    List<PaymentSummaryDto> getPaymentSummary(final LocalDateTime fromDate, final LocalDateTime toDate);
-
+    PagedResponse<PaymentSummaryDto> getPaymentSummary(
+            final LocalDateTime fromDate,
+            final LocalDateTime toDate,
+            final int page,
+            final int size
+    );
 
     /**
-     * Retrieves all payment records within an optional date-time range.
+     * Retrieves a paginated list of payments filtered by an optional date-time range.
      *
-     * <p>If both <code>fromDate</code> and <code>toDate</code> are provided, the method
-     * returns only those payments whose creation timestamps fall within the specified
-     * interval. If either parameter is null, the respective boundary is not applied.
-     * When both parameters are null, all available payments are returned.</p>
+     * <p>If {@code fromDate} and/or {@code toDate} are provided, only payments whose
+     * {@code createdDate} falls within the specified interval are included. When both
+     * parameters are {@code null}, the method may return all available payment records.</p>
      *
-     * @param fromDate the optional start date-time for filtering payments; may be null
-     * @param toDate   the optional end date-time for filtering payments; may be null
-     * @return a list of {@link Payment} entities that match the given date criteria
+     * <p>Pagination is controlled using the {@code page} and {@code size} parameters.
+     * The {@code page} value is expected to be 1-based (i.e., {@code page = 1} represents
+     * the first page). Implementations may internally convert this to zero-based
+     * indexing for repository operations.</p>
+     *
+     * @param fromDate optional lower bound (inclusive) of the payment creation timestamp;
+     *                 may be {@code null} for no lower filter
+     * @param toDate   optional upper bound (inclusive) of the payment creation timestamp;
+     *                 may be {@code null} for no upper filter
+     * @param page     the 1-based page number to retrieve
+     * @param size     the number of records per page
+     * @return a {@link PagedResponse} containing a page of {@link Payment} entities along
+     *         with pagination metadata such as total elements and total pages
      */
-    List<Payment> getAllPayments(final LocalDateTime fromDate, final LocalDateTime toDate);
+    PagedResponse<Payment> getAllPayments(
+            final LocalDateTime fromDate,
+            final LocalDateTime toDate,
+            final int page,
+            final int size
+    );
 }
