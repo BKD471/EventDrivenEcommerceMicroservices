@@ -15,5 +15,9 @@ spring:
             - Path=/api/v1/products/**
           filters:
             - RewritePath=/api/v1/products/(?<segment>.*), /api/v1/products/${segment}
+        - id: payment-service
+          uri: lb:http://PAYMENT-SERVICE
+          predicates:
+            - Path=/api/v1/payments/**
       forwarded:
         enabled: true
