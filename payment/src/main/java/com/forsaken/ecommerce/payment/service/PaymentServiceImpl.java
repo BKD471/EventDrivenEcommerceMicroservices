@@ -3,15 +3,20 @@ package com.forsaken.ecommerce.payment.service;
 
 import com.forsaken.ecommerce.avro.PaymentConfirmation;
 import com.forsaken.ecommerce.avro.PaymentMethod;
+import com.forsaken.ecommerce.common.responses.PagedResponse;
 import com.forsaken.ecommerce.payment.dto.PaymentRequest;
 import com.forsaken.ecommerce.payment.dto.PaymentSummaryDto;
 import com.forsaken.ecommerce.payment.model.Payment;
 import com.forsaken.ecommerce.payment.repository.IPaymentRepository;
+import com.forsaken.ecommerce.payment.repository.PaymentSummary;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Conversions;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -52,27 +57,62 @@ public class PaymentServiceImpl implements IPaymentService {
     }
 
     @Override
-    public List<PaymentSummaryDto> getPaymentSummary(
+    public PagedResponse<PaymentSummaryDto> getPaymentSummary(
             final LocalDateTime fromDate,
-            final LocalDateTime toDate
+            final LocalDateTime toDate,
+            final int page,
+            final int size
     ) {
-        log.info("Get Payment Summary By Date: {}", fromDate);
-        return repository.findPaymentSummaryBetween(fromDate, toDate).stream()
+        final int safePage = Math.max(page - 1, 0);
+        final int safeSize = size <= 0 ? 10 : size; // default size if needed
+        final Pageable pageable = PageRequest.of(safePage, safeSize);
+        log.info("Get Payment Summary By Date: from={}, to={}, page={}, size={}",
+                fromDate, toDate, safePage, safeSize);
+
+        final Page<PaymentSummary> summaryPage =
+                repository.findPaymentSummaryBetween(fromDate, toDate, pageable);
+        final List<PaymentSummaryDto> content = summaryPage.getContent().stream()
                 .map(p -> new PaymentSummaryDto(
                         p.getPaymentMethod(),
                         p.getCount(),
                         p.getTotalAmount()
                 ))
                 .toList();
+        return PagedResponse.<PaymentSummaryDto>builder()
+                .content(content)
+                .page(summaryPage.getNumber())
+                .size(summaryPage.getSize())
+                .totalElements(summaryPage.getTotalElements())
+                .totalPages(summaryPage.getTotalPages())
+                .build();
     }
 
     @Override
-    public List<Payment> getAllPayments(
+    public PagedResponse<Payment> getAllPayments(
             final LocalDateTime fromDate,
-            final LocalDateTime toDate
+            final LocalDateTime toDate,
+            final int page,
+            final int size
     ) {
-        log.info("Get All Payments By Date: {}", fromDate);
-        return repository.findAllByCreatedDateBetween(fromDate, toDate);
+        log.info("Get All Payments By Date: from={}, to={}, page={}, size={}",
+                fromDate, toDate, page, size);
+
+        final int safePage = Math.max(page - 1, 0);
+        final int safeSize = size <= 0 ? 5 : size;
+        final Pageable pageable = PageRequest.of(safePage, safeSize);
+        final Page<Payment> paymentPage = repository.findAllByCreatedDateBetween(
+                fromDate,
+                toDate,
+                pageable
+        );
+
+        return PagedResponse.<Payment>builder()
+                .content(paymentPage.getContent())
+                .page(paymentPage.getNumber() + 1)
+                .size(paymentPage.getSize())
+                .totalElements(paymentPage.getTotalElements())
+                .totalPages(paymentPage.getTotalPages())
+                .build();
     }
 
     private ByteBuffer convertBigDecimalToBytes(final BigDecimal value) {

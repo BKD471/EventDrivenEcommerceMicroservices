@@ -1,6 +1,7 @@
 package com.forsaken.ecommerce.payment.controller;
 
 import com.forsaken.ecommerce.common.responses.ApiResponse;
+import com.forsaken.ecommerce.common.responses.PagedResponse;
 import com.forsaken.ecommerce.payment.dto.PaymentRequest;
 import com.forsaken.ecommerce.payment.dto.PaymentSummaryDto;
 import com.forsaken.ecommerce.payment.model.Payment;
@@ -11,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -34,30 +34,34 @@ public class PaymentControllerImpl implements IPaymentController {
     }
 
     @Override
-    public ResponseEntity<ApiResponse<List<PaymentSummaryDto>>> getPaymentSummary(
+    public ResponseEntity<ApiResponse<PagedResponse<PaymentSummaryDto>>> getPaymentSummary(
             final LocalDateTime fromDate,
-            final LocalDateTime toDate
+            final LocalDateTime toDate,
+            final int page,
+            final int size
     ) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(
-                        ApiResponse.<List<PaymentSummaryDto>>builder()
+                        ApiResponse.<PagedResponse<PaymentSummaryDto>>builder()
                                 .status(ApiResponse.Status.SUCCESS)
-                                .data(paymentService.getPaymentSummary(fromDate, toDate))
+                                .data(paymentService.getPaymentSummary(fromDate, toDate, page, size))
                                 .message("Payment Summary")
                                 .build()
                 );
     }
 
     @Override
-    public ResponseEntity<ApiResponse<List<Payment>>> getAllPayments(
+    public ResponseEntity<ApiResponse<PagedResponse<Payment>>> getAllPayments(
             final LocalDateTime fromDate,
-            final LocalDateTime toDate
+            final LocalDateTime toDate,
+            final int page,
+            final int size
     ) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(
-                        ApiResponse.<List<Payment>>builder()
+                        ApiResponse.<PagedResponse<Payment>>builder()
                                 .status(ApiResponse.Status.SUCCESS)
-                                .data(paymentService.getAllPayments(fromDate, toDate))
+                                .data(paymentService.getAllPayments(fromDate, toDate, page, size))
                                 .message("Fetched Payments")
                                 .build()
                 );

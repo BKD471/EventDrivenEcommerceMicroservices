@@ -1,6 +1,8 @@
 package com.forsaken.ecommerce.payment.repository;
 
 import com.forsaken.ecommerce.payment.model.Payment;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,22 +12,31 @@ import java.util.List;
 
 public interface IPaymentRepository extends JpaRepository<Payment, Integer> {
 
-    @Query("""
-                SELECT p.paymentMethod AS paymentMethod,
-                       COUNT(p) AS count,
-                       SUM(p.amount) AS totalAmount
-                FROM Payment p
-                WHERE p.createdDate BETWEEN :fromDate AND :toDate
-                GROUP BY p.paymentMethod
-                ORDER BY p.paymentMethod
-            """)
-    List<PaymentSummary> findPaymentSummaryBetween(
+    @Query(value = """
+        SELECT p.paymentMethod AS paymentMethod,
+               COUNT(p)        AS count,
+               SUM(p.amount)   AS totalAmount
+        FROM Payment p
+        WHERE (:fromDate IS NULL OR p.createdDate >= :fromDate)
+          AND (:toDate   IS NULL OR p.createdDate <= :toDate)
+        GROUP BY p.paymentMethod
+        ORDER BY p.paymentMethod
+        """,
+            countQuery = """
+        SELECT COUNT(DISTINCT p.paymentMethod)
+        FROM Payment p
+        WHERE (:fromDate IS NULL OR p.createdDate >= :fromDate)
+          AND (:toDate   IS NULL OR p.createdDate <= :toDate)
+        """)
+    Page<PaymentSummary> findPaymentSummaryBetween(
             @Param("fromDate") final LocalDateTime fromDate,
-            @Param("toDate") final LocalDateTime toDate
+            @Param("toDate") final LocalDateTime toDate,
+            final Pageable pageable
     );
 
-    List<Payment> findAllByCreatedDateBetween(
-            final LocalDateTime fromDate,
-            final LocalDateTime toDate
+    Page<Payment> findAllByCreatedDateBetween(
+            LocalDateTime fromDate,
+            LocalDateTime toDate,
+            Pageable pageable
     );
 }

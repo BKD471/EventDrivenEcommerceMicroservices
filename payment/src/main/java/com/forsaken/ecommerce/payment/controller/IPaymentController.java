@@ -2,6 +2,7 @@ package com.forsaken.ecommerce.payment.controller;
 
 
 import com.forsaken.ecommerce.common.responses.ApiResponse;
+import com.forsaken.ecommerce.common.responses.PagedResponse;
 import com.forsaken.ecommerce.payment.dto.PaymentRequest;
 import com.forsaken.ecommerce.payment.dto.PaymentSummaryDto;
 import com.forsaken.ecommerce.payment.model.Payment;
@@ -16,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @RequestMapping("/api/v1/payments")
 public interface IPaymentController {
@@ -40,44 +40,65 @@ public interface IPaymentController {
     );
 
     /**
-     * Retrieves a summary of payments within the specified date range.
+     * Retrieves a paginated summary of payments grouped by payment method for the specified date range.
      *
-     * <p>This endpoint returns aggregated payment information between the provided
-     * <code>fromDate</code> and <code>toDate</code>. If no date parameters are supplied,
-     * the full available dataset may be considered depending on service logic.</p>
+     * <p>This endpoint aggregates payment records within the optional {@code fromDate} and {@code toDate}
+     * filters, groups them by payment method, and returns a paginated list of summaries. If no date values
+     * are provided, the implementation may return summaries for the full dataset.</p>
      *
-     * @param fromDate optional start date-time (ISO-8601 format). If null, no lower bound is applied.
-     * @param toDate   optional end date-time (ISO-8601 format). If null, no upper bound is applied.
-     * @return a ResponseEntity containing an ApiResponse wrapping a list of PaymentSummaryDto objects
-     * representing summarized payment data.
-     * @implNote Both dates must be in valid ISO date-time format: yyyy-MM-dd'T'HH:mm:ss.
+     * <p>Pagination is controlled through the {@code page} and {@code size} parameters. The page index is
+     * 1-based, meaning {@code page = 1} refers to the first page of results.</p>
+     *
+     * @param fromDate optional start of the date-time range filter (ISO-8601 format);
+     *                 if omitted, no lower bound is applied
+     * @param toDate   optional end of the date-time range filter (ISO-8601 format);
+     *                 if omitted, no upper bound is applied
+     * @param page     the page number to retrieve (1-based); defaults to 1
+     * @param size     the number of records per page; defaults to 3
+     * @return {@link ApiResponse} wrapping a {@link PagedResponse} containing
+     *         {@link PaymentSummaryDto} items and pagination metadata
      */
     @GetMapping("/summary")
-    ResponseEntity<ApiResponse<List<PaymentSummaryDto>>> getPaymentSummary(
+    ResponseEntity<ApiResponse<PagedResponse<PaymentSummaryDto>>> getPaymentSummary(
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) final LocalDateTime fromDate,
 
             @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) final LocalDateTime toDate
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) final LocalDateTime toDate,
+
+            @RequestParam(name = "page", defaultValue = "1") final int page,
+            @RequestParam(name = "size", defaultValue = "3") final int size
     );
 
     /**
-     * Retrieves all payment records within an optional date range.
+     * Retrieves a paginated list of payments filtered by an optional date-time range.
      *
-     * <p>If both <code>fromDate</code> and <code>toDate</code> are provided, payments
-     * created within that date-time interval are returned. When no date parameters
-     * are supplied, all available payment records are retrieved.</p>
+     * <p>If {@code fromDate} and/or {@code toDate} are provided, only payments whose
+     * {@code createdDate} falls within the specified interval are included. If both
+     * parameters are omitted, all available payments may be returned.</p>
      *
-     * @param fromDate optional start date-time filter (ISO-8601 format). If null, no lower bound is applied.
-     * @param toDate   optional end date-time filter (ISO-8601 format). If null, no upper bound is applied.
-     * @return a ResponseEntity containing an ApiResponse wrapping a list of Payment objects
+     * <p>Pagination is controlled via the {@code page} and {@code size} parameters.
+     * The page index is 1-based, meaning {@code page = 1} corresponds to the first page
+     * of results.</p>
+     *
+     * @param fromDate optional start of the date-time filter (ISO-8601 format);
+     *                 if null, no lower bound is applied
+     * @param toDate   optional end of the date-time filter (ISO-8601 format);
+     *                 if null, no upper bound is applied
+     * @param page     1-based page number to retrieve; defaults to 1
+     * @param size     number of records per page; defaults to 3
+     * @return {@link ApiResponse} wrapping a {@link PagedResponse} containing
+     *         {@link Payment} entities and pagination metadata
      */
     @GetMapping("/allPayments")
-    ResponseEntity<ApiResponse<List<Payment>>> getAllPayments(
+    ResponseEntity<ApiResponse<PagedResponse<Payment>>> getAllPayments(
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) final LocalDateTime fromDate,
 
             @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) final LocalDateTime toDate
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) final LocalDateTime toDate,
+
+            @RequestParam(name = "page", defaultValue = "1") final int page,
+            @RequestParam(name = "size", defaultValue = "3") final int size
     );
 }
