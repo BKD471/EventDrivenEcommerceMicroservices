@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RequestMapping("/api/v1/payments")
-public interface IProductController {
+public interface IPaymentController {
 
     /**
      * Creates a new payment record.

@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-public class ProductControllerImpl implements IProductController {
+public class PaymentControllerImpl implements IPaymentController {
 
     @Override
     public ResponseEntity<ApiResponse<Integer>> createPayment(
