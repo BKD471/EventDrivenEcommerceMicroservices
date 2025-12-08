@@ -29,6 +29,7 @@
     <properties>
         <common-lib.version>1.0.0</common-lib.version>
         <spring-boot.version>3.2.5</spring-boot.version>
+        <avro.version>1.11.3</avro.version>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <lombok.version>1.18.34</lombok.version>
