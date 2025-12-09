@@ -23,6 +23,24 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests for {@link NotificationProducerServiceImpl}, validating that
+ * payment confirmation notifications are correctly published to Kafka.
+ *
+ * <p>This test class uses Mockito to isolate and verify the behavior of the
+ * notification producer, ensuring that:</p>
+ *
+ * <ul>
+ *     <li>The Kafka topic is correctly resolved from {@link KafkaProperties}</li>
+ *     <li>A {@link Message} containing a {@link PaymentConfirmation} payload
+ *         is constructed and sent</li>
+ *     <li>Message headers (e.g., the Kafka topic) are properly populated</li>
+ *     <li>No additional interactions with the Kafka template occur beyond the send</li>
+ * </ul>
+ *
+ * <p>These tests do not interact with a real Kafka broker and instead focus
+ * purely on validating message construction and producer invocation logic.</p>
+ */
 @ExtendWith(MockitoExtension.class)
 class NotificationProducerServiceImplTest {
 
@@ -34,11 +52,29 @@ class NotificationProducerServiceImplTest {
 
     private NotificationProducerServiceImpl service;
 
+    /**
+     * Initializes the service with mocked dependencies prior to each test.
+     *
+     * <p>The goal is to verify that {@link NotificationProducerServiceImpl}
+     * constructs and sends Kafka messages correctly, independent of external systems.</p>
+     */
     @BeforeEach
     void setup() {
         service = new NotificationProducerServiceImpl(kafkaProperties, kafkaTemplate);
     }
 
+    /**
+     * Verifies that {@link NotificationProducerServiceImpl#sendNotification(PaymentConfirmation)}
+     * correctly publishes a message to Kafka with the expected payload and headers.
+     *
+     * <p>This test ensures:</p>
+     * <ul>
+     *     <li>The configured Kafka topic is used</li>
+     *     <li>The {@link PaymentConfirmation} payload is inserted as the message body</li>
+     *     <li>The Kafka message header `kafka_topic` is correctly populated</li>
+     *     <li>{@link KafkaTemplate#send(Message)} is invoked exactly once</li>
+     * </ul>
+     */
     @Test
     void testSendNotification() {
         // Given
@@ -58,7 +94,15 @@ class NotificationProducerServiceImplTest {
         assertEquals(topic, msg.getHeaders().get("kafka_topic"));
     }
 
-
+    /**
+     * Helper method to construct a valid {@link PaymentConfirmation} instance for testing.
+     *
+     * <p>The object is populated with sample customer, payment, and order details.
+     * The {@code amount} field is encoded into a {@link ByteBuffer} as required
+     * by the Avro schema.</p>
+     *
+     * @return a fully populated {@link PaymentConfirmation} instance
+     */
     private PaymentConfirmation constructPaymentConfirmation() {
         final ByteBuffer amount = ByteBuffer.wrap("150.50".getBytes());
         return PaymentConfirmation.newBuilder()

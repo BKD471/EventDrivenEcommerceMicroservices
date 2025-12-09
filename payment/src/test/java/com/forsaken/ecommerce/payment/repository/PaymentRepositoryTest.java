@@ -21,6 +21,16 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests for verifying repository-layer interactions with {@link IPaymentRepository}
+ * using Mockito-based stubbing.
+ *
+ * <p>This test class does not interact with a real database. Instead, it ensures that
+ * repository method contracts are correctly invoked and that mocked responses behave
+ * as expected. These tests are valuable for validating query method signatures,
+ * projection handling, and ensuring that service-layer code relying on the repository
+ * will receive the expected data structures.</p>
+ */
 @ExtendWith(MockitoExtension.class)
 class PaymentRepositoryTest {
 
@@ -31,6 +41,12 @@ class PaymentRepositoryTest {
     private LocalDateTime dateTwo;
     private LocalDateTime dateThree;
 
+    /**
+     * Initializes commonly used date instances for test filtering scenarios.
+     *
+     * <p>These timestamps simulate realistic filtering windows for queries
+     * involving payment creation dates.</p>
+     */
     @BeforeEach
     void setup() {
         dateOne = LocalDateTime.of(2025, 1, 1, 10, 0);
@@ -38,6 +54,18 @@ class PaymentRepositoryTest {
         dateThree = LocalDateTime.of(2025, 1, 10, 20, 0);
     }
 
+    /**
+     * Verifies that the repository method {@link IPaymentRepository#findPaymentSummaryBetween}
+     * correctly returns a page of {@link PaymentSummary} projections when invoked
+     * with a valid date range and pageable request.
+     *
+     * <p>This test ensures:</p>
+     * <ul>
+     *     <li>Proper delegation to the repository method with expected arguments</li>
+     *     <li>Correct transformation and retrieval of projection-based results</li>
+     *     <li>Pagination metadata is preserved in the returned {@link Page}</li>
+     * </ul>
+     */
     @Test
     void testFindPaymentSummaryBetween() {
         // Given
@@ -84,6 +112,18 @@ class PaymentRepositoryTest {
         assertEquals(2, result.getTotalElements());
     }
 
+    /**
+     * Validates that {@link IPaymentRepository#findAllByCreatedDateBetween}
+     * returns a paginated list of {@link Payment} entities when called with
+     * the correct date boundaries and pageable configuration.
+     *
+     * <p>The test asserts:</p>
+     * <ul>
+     *     <li>Invocation of the repository with exact filter parameters</li>
+     *     <li>Correct handling of paginated entity results</li>
+     *     <li>Expected total element count in the returned page</li>
+     * </ul>
+     */
     @Test
     void testFindAllByCreatedDateBetween() {
         // Given

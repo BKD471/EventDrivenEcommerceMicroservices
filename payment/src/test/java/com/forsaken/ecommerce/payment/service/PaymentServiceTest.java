@@ -32,6 +32,27 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests for {@link PaymentServiceImpl}, validating core payment business logic
+ * including payment creation, summary aggregation, and paginated retrieval.
+ *
+ * <p>This test suite isolates the service layer by mocking all dependencies:
+ * <ul>
+ *     <li>{@link IPaymentRepository} – to simulate persistence operations</li>
+ *     <li>{@link INotificationProducerService} – to verify notification publishing</li>
+ * </ul>
+ *
+ * <p>The tests ensure that:</p>
+ * <ul>
+ *     <li>Payment creation persists the correct entity</li>
+ *     <li>Payment confirmation events are published to Kafka</li>
+ *     <li>Summary queries return correctly transformed DTO results</li>
+ *     <li>Pagination calculations and mappings behave as expected</li>
+ * </ul>
+ *
+ * <p>No actual database or Kafka broker is used; Mockito enforces strict
+ * interaction-based validation.</p>
+ */
 @ExtendWith(MockitoExtension.class)
 class PaymentServiceTest {
 
@@ -43,12 +64,29 @@ class PaymentServiceTest {
 
     private PaymentServiceImpl service;
 
+    /**
+     * Initializes the service with mocked dependencies before each test execution.
+     *
+     * <p>This ensures predictable and isolated behavior, as all persistence
+     * and messaging actions are replaced with Mockito stubs.</p>
+     */
     @BeforeEach
     void setup() {
         service = new PaymentServiceImpl(repository, notificationProducer);
     }
 
-
+    /**
+     * Verifies that creating a payment:
+     * <ul>
+     *     <li>Converts the request to a {@link Payment} entity</li>
+     *     <li>Persists the entity via the repository</li>
+     *     <li>Returns the generated payment ID</li>
+     *     <li>Emits a corresponding {@link PaymentConfirmation} notification</li>
+     * </ul>
+     *
+     * <p>This is the most critical behavior of the payment module, ensuring both
+     * persistence and event-driven integration workflows are triggered.</p>
+     */
     @Test
     void testCreatePayment() {
         // Given
@@ -75,7 +113,18 @@ class PaymentServiceTest {
         assertEquals("John", paymentConfirmation.getCustomerFirstname());
     }
 
-
+    /**
+     * Validates the payment summary aggregation logic.
+     *
+     * <p>This test ensures that the service:</p>
+     * <ul>
+     *     <li>Delegates to {@link IPaymentRepository#findPaymentSummaryBetween}</li>
+     *     <li>Converts {@link PaymentSummary} projections into {@link PaymentSummaryDto}</li>
+     *     <li>Wraps the results in a {@link PagedResponse} structure</li>
+     * </ul>
+     *
+     * <p>The test uses a single mocked summary entry to verify DTO mapping.</p>
+     */
     @Test
     void testGetPaymentSummary() {
         // Given
@@ -111,7 +160,23 @@ class PaymentServiceTest {
         assertEquals(new BigDecimal("300"), result.content().get(0).totalAmount());
     }
 
-
+    /**
+     * Tests paginated payment retrieval with date filtering.
+     *
+     * <p>This test verifies that the service:</p>
+     * <ul>
+     *     <li>Calls {@link IPaymentRepository#findAllByCreatedDateBetween}</li>
+     *     <li>Returns a correctly populated {@link PagedResponse} including:</li>
+     *     <ul>
+     *         <li>content list</li>
+     *         <li>page number adjustment (0 → 1)</li>
+     *         <li>page size</li>
+     *         <li>total elements</li>
+     *     </ul>
+     * </ul>
+     *
+     * <p>This ensures pagination semantics remain consistent with controller expectations.</p>
+     */
     @Test
     void testGetAllPayments() {
         // Given
@@ -135,6 +200,13 @@ class PaymentServiceTest {
         assertEquals(2, result.totalElements());
     }
 
+    /**
+     * Constructs a fully populated {@link PaymentRequest} object for convenient reuse
+     * across test scenarios.
+     *
+     * @param paymentId the ID to assign to the request
+     * @return a populated {@link PaymentRequest}
+     */
     private PaymentRequest constructPaymentRequest(final int paymentId) {
         return PaymentRequest.builder()
                 .id(paymentId)
@@ -146,6 +218,11 @@ class PaymentServiceTest {
                 .build();
     }
 
+    /**
+     * Helper for building a mock {@link Customer} instance used in payment creation tests.
+     *
+     * @return a sample {@link Customer} object
+     */
     private Customer constructCustomer() {
         return Customer.builder()
                 .id("cust_123")
