@@ -3,9 +3,9 @@ package com.forsaken.ecommerce.customer.controller;
 
 import com.forsaken.ecommerce.common.exceptions.CustomerNotFoundExceptions;
 import com.forsaken.ecommerce.common.responses.ApiResponse;
+import com.forsaken.ecommerce.common.responses.PagedResponse;
 import com.forsaken.ecommerce.customer.dto.CustomerRequest;
 import com.forsaken.ecommerce.customer.dto.CustomerResponse;
-import com.forsaken.ecommerce.customer.dto.PagedResponse;
 import com.forsaken.ecommerce.customer.model.Address;
 import com.forsaken.ecommerce.customer.service.ICustomerService;
 import org.junit.jupiter.api.Test;
@@ -25,7 +25,27 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-
+/**
+ * Unit tests for {@link CustomerControllerImpl}, validating that the controller
+ * correctly delegates to {@link ICustomerService}, constructs proper
+ * {@link ApiResponse} objects, and returns the expected {@link ResponseEntity}
+ * status codes.
+ *
+ * <p>This test class uses Mockito for mocking dependencies and focuses on
+ * controller-layer behavior only—no service or persistence logic is executed.
+ *
+ * <p>Test scenarios include:
+ * <ul>
+ *     <li>Customer creation</li>
+ *     <li>Customer update</li>
+ *     <li>Pagination retrieval of customers</li>
+ *     <li>Existence checks</li>
+ *     <li>Fetch by ID</li>
+ *     <li>Fetch by email</li>
+ *     <li>Customer deletion</li>
+ *     <li>Exception propagation for not-found cases</li>
+ * </ul>
+ */
 @ExtendWith(MockitoExtension.class)
 class CustomerControllerImplTest {
 
@@ -39,6 +59,15 @@ class CustomerControllerImplTest {
     private CustomerControllerImpl controller;
 
 
+    /**
+     * Tests that the controller correctly handles a create-customer request
+     * by:
+     * <ul>
+     *     <li>Delegating to {@link ICustomerService#createCustomer}</li>
+     *     <li>Returning HTTP 201 (CREATED)</li>
+     *     <li>Wrapping the service response inside {@link ApiResponse}</li>
+     * </ul>
+     */
     @Test
     void createCustomer_ReturnsCreatedResponse() throws CustomerNotFoundExceptions {
         // Given
@@ -60,6 +89,14 @@ class CustomerControllerImplTest {
         verify(customerService, times(1)).createCustomer(request);
     }
 
+    /**
+     * Tests that updating an existing customer results in:
+     * <ul>
+     *     <li>Delegation to the service layer</li>
+     *     <li>HTTP 202 (ACCEPTED)</li>
+     *     <li>Correct success message and returned data</li>
+     * </ul>
+     */
     @Test
     void updateCustomer_ReturnsAcceptedResponse() throws CustomerNotFoundExceptions {
         // Given
@@ -81,6 +118,14 @@ class CustomerControllerImplTest {
         verify(customerService, times(1)).updateCustomer(request);
     }
 
+    /**
+     * Tests that retrieving all customers with pagination:
+     * <ul>
+     *     <li>Invokes the service with correct paging parameters</li>
+     *     <li>Returns HTTP 200 (OK)</li>
+     *     <li>Wraps the result inside {@link ApiResponse} with SUCCESS status</li>
+     * </ul>
+     */
     @Test
     void findAll_WithPagination_ReturnsPagedResponse() {
         // Given
@@ -115,6 +160,14 @@ class CustomerControllerImplTest {
         verify(customerService, times(1)).findAllCustomers(page, size);
     }
 
+    /**
+     * Tests the existence check when the customer exists:
+     * <ul>
+     *     <li>Service returns true</li>
+     *     <li>Controller returns SUCCESS status</li>
+     *     <li>Correct success message is included</li>
+     * </ul>
+     */
     @Test
     void existsById_WhenExists_ReturnsSuccessStatus() {
         // Given
@@ -133,6 +186,14 @@ class CustomerControllerImplTest {
         verify(customerService, times(1)).existsById(CUSTOMER_ID);
     }
 
+    /**
+     * Tests the existence check when the customer does NOT exist:
+     * <ul>
+     *     <li>Service returns false</li>
+     *     <li>Controller returns FAILED status</li>
+     *     <li>Correct not-found message is returned</li>
+     * </ul>
+     */
     @Test
     void existsById_WhenNotExists_ReturnsFailedStatus() {
         // Given
@@ -151,6 +212,14 @@ class CustomerControllerImplTest {
         verify(customerService, times(1)).existsById(CUSTOMER_ID);
     }
 
+    /**
+     * Tests fetching a customer by ID when the record exists:
+     * <ul>
+     *     <li>Service returns a populated {@link CustomerResponse}</li>
+     *     <li>Controller wraps it inside a SUCCESS {@link ApiResponse}</li>
+     *     <li>Returns HTTP 200 (OK)</li>
+     * </ul>
+     */
     @Test
     void findById_ReturnsCustomer_WhenFound() throws CustomerNotFoundExceptions {
         // Given
@@ -170,6 +239,11 @@ class CustomerControllerImplTest {
         verify(customerService, times(1)).findById(CUSTOMER_ID);
     }
 
+    /**
+     * Ensures that the controller does NOT swallow {@link CustomerNotFoundExceptions}.
+     * <p>Since the controller declares `throws CustomerNotFoundExceptions`,
+     * the exception should be propagated outward.</p>
+     */
     @Test
     void findById_PropagatesException_WhenNotFound() throws CustomerNotFoundExceptions {
         // Given
@@ -180,6 +254,14 @@ class CustomerControllerImplTest {
         verify(customerService, times(1)).findById(CUSTOMER_ID);
     }
 
+    /**
+     * Tests fetching customer by email:
+     * <ul>
+     *     <li>Service returns a matching {@link CustomerResponse}</li>
+     *     <li>Controller responds with HTTP 200 (OK)</li>
+     *     <li>Correct success message is included</li>
+     * </ul>
+     */
     @Test
     void findByEmail_ReturnsCustomer_WhenFound() throws CustomerNotFoundExceptions {
         // Given
@@ -199,6 +281,15 @@ class CustomerControllerImplTest {
         verify(customerService, times(1)).findByEmail(CUSTOMER_EMAIL);
     }
 
+    /**
+     * Tests customer deletion logic:
+     * <ul>
+     *     <li>Service returns confirmation string</li>
+     *     <li>Controller returns SUCCESS ApiResponse</li>
+     *     <li>Includes correct deletion message</li>
+     *     <li>Returns HTTP 200 (OK)</li>
+     * </ul>
+     */
     @Test
     void delete_ReturnsSuccess() {
         // Given
@@ -218,6 +309,9 @@ class CustomerControllerImplTest {
         verify(customerService, times(1)).deleteCustomer(CUSTOMER_ID);
     }
 
+    /**
+     * Helper method for constructing a sample {@link CustomerRequest} used in tests.
+     */
     private CustomerRequest constructCustomerRequest() {
         return CustomerRequest.builder()
                 .id(CUSTOMER_ID)
@@ -228,6 +322,9 @@ class CustomerControllerImplTest {
                 .build();
     }
 
+    /**
+     * Helper method for constructing a sample {@link Address}.
+     */
     private Address constructAddress() {
         return Address.builder()
                 .street("Street-123")
@@ -236,7 +333,9 @@ class CustomerControllerImplTest {
                 .build();
     }
 
-
+    /**
+     * Helper method for constructing a sample {@link CustomerResponse}.
+     */
     private CustomerResponse constructCustomerResponse() {
         return CustomerResponse.builder()
                 .id(CUSTOMER_ID)

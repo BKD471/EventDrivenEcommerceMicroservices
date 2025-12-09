@@ -3,9 +3,9 @@ package com.forsaken.ecommerce.customer.controller;
 
 import com.forsaken.ecommerce.common.exceptions.CustomerNotFoundExceptions;
 import com.forsaken.ecommerce.common.responses.ApiResponse;
+import com.forsaken.ecommerce.common.responses.PagedResponse;
 import com.forsaken.ecommerce.customer.dto.CustomerRequest;
 import com.forsaken.ecommerce.customer.dto.CustomerResponse;
-import com.forsaken.ecommerce.customer.dto.PagedResponse;
 import com.forsaken.ecommerce.customer.service.ICustomerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

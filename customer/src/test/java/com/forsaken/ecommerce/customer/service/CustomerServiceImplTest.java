@@ -2,9 +2,9 @@ package com.forsaken.ecommerce.customer.service;
 
 
 import com.forsaken.ecommerce.common.exceptions.CustomerNotFoundExceptions;
+import com.forsaken.ecommerce.common.responses.PagedResponse;
 import com.forsaken.ecommerce.customer.dto.CustomerRequest;
 import com.forsaken.ecommerce.customer.dto.CustomerResponse;
-import com.forsaken.ecommerce.customer.dto.PagedResponse;
 import com.forsaken.ecommerce.customer.model.Address;
 import com.forsaken.ecommerce.customer.model.Customer;
 import com.forsaken.ecommerce.customer.repository.CustomerRepository;
@@ -33,7 +33,22 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-
+/**
+ * Unit tests for {@link CustomerServiceImpl}, validating the correctness of
+ * service-layer business logic, including:
+ *
+ * <ul>
+ *     <li>Customer creation with email uniqueness enforcement</li>
+ *     <li>Updating existing customer records</li>
+ *     <li>Pagination and content slicing in findAllCustomers()</li>
+ *     <li>Customer lookup by ID and email</li>
+ *     <li>Existence checks</li>
+ *     <li>Delegation to {@link CustomerRepository}</li>
+ *     <li>Exception propagation for missing customers</li>
+ * </ul>
+ *
+ * <p>All repository calls are mocked to isolate and test service logic only.
+ */
 @ExtendWith(MockitoExtension.class)
 class CustomerServiceImplTest {
 
@@ -50,13 +65,26 @@ class CustomerServiceImplTest {
 
     private CustomerRequest requestMock;
 
-
+    /**
+     * Initializes mocks before each test run.
+     *
+     * <p>Creates a mock {@link CustomerRequest} used in multiple test cases.
+     */
     @BeforeEach
     void setUp() {
         requestMock = mock(CustomerRequest.class);
     }
 
-
+    /**
+     * Verifies customer creation flow when the provided email does NOT already exist.
+     *
+     * <ul>
+     *     <li>Repository is queried for existing email</li>
+     *     <li>Service generates a new ID</li>
+     *     <li>The new Customer object is passed to {@link CustomerRepository#save}</li>
+     *     <li>The captured Customer contains the expected email</li>
+     * </ul>
+     */
     @Test
     void createCustomer_ShouldReturnGeneratedId_WhenEmailNotPresent() throws CustomerNotFoundExceptions {
         // Given
@@ -82,7 +110,16 @@ class CustomerServiceImplTest {
         assertEquals(EMAIL_NEW, captured.getCustomerEmail());
     }
 
-
+    /**
+     * Ensures that customer creation fails when the provided email already exists.
+     *
+     * <ul>
+     *     <li>Repository returns an existing customer</li>
+     *     <li>Service throws {@link CustomerNotFoundExceptions}</li>
+     *     <li>No save() operation is executed</li>
+     *     <li>Repository is not interacted with beyond findByEmail()</li>
+     * </ul>
+     */
     @Test
     void createCustomer_ShouldThrow_WhenEmailAlreadyExists() {
         // Given
@@ -99,7 +136,16 @@ class CustomerServiceImplTest {
         verifyNoMoreInteractions(customerRepository);
     }
 
-
+    /**
+     * Tests successful customer update logic:
+     *
+     * <ul>
+     *     <li>Repository returns an existing customer record</li>
+     *     <li>Fields are updated from the request</li>
+     *     <li>The updated Customer is saved</li>
+     *     <li>Returned value contains the updated customer's ID</li>
+     * </ul>
+     */
     @Test
     void updateCustomer_ShouldUpdate_WhenCustomerExists() throws CustomerNotFoundExceptions {
         // Given
@@ -128,7 +174,16 @@ class CustomerServiceImplTest {
         assertNotNull(captured);
     }
 
-
+    /**
+     * Ensures that updating a customer fails when the record does not exist.
+     *
+     * <ul>
+     *     <li>Repository returns Optional.empty()</li>
+     *     <li>Service throws {@link CustomerNotFoundExceptions}</li>
+     *     <li>No save() operation is invoked</li>
+     *     <li>No further repository interactions occur</li>
+     * </ul>
+     */
     @Test
     void updateCustomer_ShouldThrow_WhenCustomerNotFound() {
         // Given
@@ -146,7 +201,15 @@ class CustomerServiceImplTest {
     }
 
 
-
+    /**
+     * Validates pagination behavior in findAllCustomers():
+     *
+     * <ul>
+     *     <li>Repository returns a fixed list of customers</li>
+     *     <li>Service slices the list based on page and size</li>
+     *     <li>Correct content, page, size, totalElements, and totalPages are returned</li>
+     * </ul>
+     */
     @Test
     void findAllCustomers_WithPagination_ReturnsPagedResponse() {
         // Given
@@ -179,7 +242,15 @@ class CustomerServiceImplTest {
         verify(customerRepository, times(1)).findAll();
     }
 
-    // Test for out of range page
+    /**
+     * Tests pagination when the requested page exceeds total available pages.
+     *
+     * <p>Expected behavior:
+     * <ul>
+     *     <li>totalElements and totalPages remain correct</li>
+     *     <li>Returned content list is empty</li>
+     * </ul>
+     */
     @Test
     void findAllCustomers_PageOutOfRange_ReturnsEmptyContent() {
         // Given
@@ -203,6 +274,15 @@ class CustomerServiceImplTest {
         assertTrue(result.content().isEmpty());
     }
 
+    /**
+     * Ensures the service normalizes invalid or negative page numbers to page=1.
+     *
+     * <p>Validates that:
+     * <ul>
+     *     <li>Content is correctly computed using page 1</li>
+     *     <li>Pagination metadata is accurate</li>
+     * </ul>
+     */
     @ParameterizedTest
     @ValueSource(ints = {0, -1, -2, -3, -4, -5})
     void findAllCustomers_InvalidOrNegativePage_AlwaysUsesPage1(int page) {
@@ -227,7 +307,15 @@ class CustomerServiceImplTest {
         assertEquals(1, result.totalPages());
     }
 
-
+    /**
+     * Tests successful lookup by customer ID.
+     *
+     * <ul>
+     *     <li>Repository returns a matching customer</li>
+     *     <li>Service converts entity → DTO</li>
+     *     <li>The expected CustomerResponse is returned</li>
+     * </ul>
+     */
     @Test
     void findById_ShouldReturnResponse_WhenFound() throws CustomerNotFoundExceptions {
         // Given
@@ -242,7 +330,15 @@ class CustomerServiceImplTest {
         assertEquals(expected, actual);
     }
 
-
+    /**
+     * Ensures the service throws {@link CustomerNotFoundExceptions}
+     * when a customer does not exist.
+     *
+     * <ul>
+     *     <li>Repository returns Optional.empty()</li>
+     *     <li>Service propagates the exception</li>
+     * </ul>
+     */
     @Test
     void findById_ShouldThrow_WhenNotFound() {
         // Given
@@ -251,8 +347,15 @@ class CustomerServiceImplTest {
         assertThrows(CustomerNotFoundExceptions.class, () -> customerService.findById(CUSTOMER_ID));
         verify(customerRepository, times(1)).findById(CUSTOMER_ID);
     }
-
-
+    /**
+     * Tests lookup by email when matching record exists.
+     *
+     * <ul>
+     *     <li>Repository returns the matching customer</li>
+     *     <li>Service converts entity → DTO</li>
+     *     <li>Correct CustomerResponse is returned</li>
+     * </ul>
+     */
     @Test
     void findByEmail_ShouldReturnResponse_WhenFound() throws CustomerNotFoundExceptions {
         // Given
@@ -267,7 +370,15 @@ class CustomerServiceImplTest {
         assertEquals(expected, actual);
     }
 
-
+    /**
+     * Ensures service throws {@link CustomerNotFoundExceptions} when
+     * no customer exists for the given email.
+     *
+     * <ul>
+     *     <li>Repository returns Optional.empty()</li>
+     *     <li>Service throws exception</li>
+     * </ul>
+     */
     @Test
     void findByEmail_ShouldThrow_WhenNotFound() {
         // Given
@@ -277,7 +388,14 @@ class CustomerServiceImplTest {
         verify(customerRepository, times(1)).findByEmail(EMAIL_NEW);
     }
 
-
+    /**
+     * Tests existence check when a customer exists.
+     *
+     * <ul>
+     *     <li>Repository returns an existing customer</li>
+     *     <li>Service returns true</li>
+     * </ul>
+     */
     @Test
     void existsById_ShouldReturnTrue_WhenFound() {
         // Given
@@ -287,7 +405,14 @@ class CustomerServiceImplTest {
         assertTrue(customerService.existsById(CUSTOMER_ID));
     }
 
-
+    /**
+     * Tests existence check when a customer does not exist.
+     *
+     * <ul>
+     *     <li>Repository returns Optional.empty()</li>
+     *     <li>Service returns false</li>
+     * </ul>
+     */
     @Test
     void existsById_ShouldReturnFalse_WhenNotFound() {
         // Given
@@ -296,7 +421,14 @@ class CustomerServiceImplTest {
         assertFalse(customerService.existsById(CUSTOMER_ID));
     }
 
-
+    /**
+     * Verifies deletion logic:
+     *
+     * <ul>
+     *     <li>Repository.deleteById() is called exactly once</li>
+     *     <li>Service returns a message containing the deleted ID</li>
+     * </ul>
+     */
     @Test
     void deleteCustomer_ShouldCallDeleteById_AndReturnMessage() {
         // When
@@ -307,7 +439,10 @@ class CustomerServiceImplTest {
         assertTrue(msg.contains(CUSTOMER_ID));
     }
 
-
+    /**
+     * Helper method for constructing a {@link Customer} object with
+     * the provided attributes and a default address.
+     */
     private Customer constructCustomer(final String customerId,
                                        final String firstName,
                                        final String lastName,
@@ -322,6 +457,9 @@ class CustomerServiceImplTest {
                 .build();
     }
 
+    /**
+     * Helper utility to construct a sample {@link Address} used in test customers.
+     */
     private Address constructAddress() {
         return Address.builder()
                 .street("Street-123")

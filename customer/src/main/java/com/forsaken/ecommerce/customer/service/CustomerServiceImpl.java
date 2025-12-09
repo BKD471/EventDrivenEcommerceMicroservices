@@ -1,9 +1,9 @@
 package com.forsaken.ecommerce.customer.service;
 
 import com.forsaken.ecommerce.common.exceptions.CustomerNotFoundExceptions;
+import com.forsaken.ecommerce.common.responses.PagedResponse;
 import com.forsaken.ecommerce.customer.dto.CustomerRequest;
 import com.forsaken.ecommerce.customer.dto.CustomerResponse;
-import com.forsaken.ecommerce.customer.dto.PagedResponse;
 import com.forsaken.ecommerce.customer.model.Customer;
 import com.forsaken.ecommerce.customer.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
@@ -56,7 +56,7 @@ public class CustomerServiceImpl implements ICustomerService {
     }
 
     @Override
-    public PagedResponse<CustomerResponse> findAllCustomers(final int page,final int size) {
+    public PagedResponse<CustomerResponse> findAllCustomers(final int page, final int size) {
         log.info("Received request to get all customers");
         final List<CustomerResponse> customerResponses=this.customerRepository.findAll()
                 .stream()

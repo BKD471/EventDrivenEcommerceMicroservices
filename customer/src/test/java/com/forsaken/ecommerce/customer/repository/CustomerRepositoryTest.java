@@ -30,6 +30,35 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests for {@link CustomerRepository}, ensuring that all DynamoDB Enhanced Client
+ * operations are invoked correctly and that the repository behaves as expected when
+ * interacting with DynamoDB tables, indexes, and query results.
+ *
+ * <p>This test suite validates repository behavior by mocking:
+ * <ul>
+ *     <li>{@link DynamoDbEnhancedClient}</li>
+ *     <li>{@link DynamoDbTable}</li>
+ *     <li>{@link DynamoDbIndex}</li>
+ *     <li>DynamoDB Page and PageIterable flows</li>
+ * </ul>
+ *
+ * <p>The repository design uses the DynamoDB Enhanced Client pattern with Consumers
+ * passed into operations like:
+ * <ul>
+ *     <li>{@code getItem(Consumer)}</li>
+ *     <li>{@code deleteItem(Consumer)}</li>
+ *     <li>{@code query(Consumer)}</li>
+ * </ul>
+ *
+ * These tests verify that:
+ * <ul>
+ *     <li>The correct Enhanced Client methods are invoked</li>
+ *     <li>Consumer request-builders are passed and utilized</li>
+ *     <li>Optional return types behave consistently</li>
+ *     <li>Scans, queries, and index access work as expected</li>
+ * </ul>
+ */
 public class CustomerRepositoryTest {
 
     private static final String CUSTOMER_ID = "cust-123";
@@ -41,6 +70,13 @@ public class CustomerRepositoryTest {
     private DynamoDbProperties properties;
     private CustomerRepository repository;
 
+    /**
+     * Initializes all mocked DynamoDB components and constructs a {@link CustomerRepository}
+     * instance before each test.
+     *
+     * <p>Also stubs the table name lookup and ensures that calling
+     * {@code enhancedClient.table(...)} returns the mocked {@link DynamoDbTable}.
+     */
     @BeforeEach
     void setup() {
         enhancedClient = mock(DynamoDbEnhancedClient.class);
@@ -55,7 +91,10 @@ public class CustomerRepositoryTest {
         repository = new CustomerRepository(enhancedClient, properties);
     }
 
-
+    /**
+     * Verifies that calling {@link CustomerRepository#save(Customer)} delegates to
+     * {@link DynamoDbTable#putItem(Object)} exactly once with the expected customer object.
+     */
     @Test
     void testSave() {
         // Given
@@ -68,7 +107,16 @@ public class CustomerRepositoryTest {
         verify(customerTable, times(1)).putItem(customer);
     }
 
-
+    /**
+     * Tests successful lookup of a customer by ID.
+     *
+     * <p>Validates that:
+     * <ul>
+     *     <li>A Consumer is passed to {@code getItem(Consumer)}</li>
+     *     <li>The mocked table returns the expected Customer</li>
+     *     <li>The repository returns {@link Optional#of(Object)}</li>
+     * </ul>
+     */
     @Test
     void testFindById_Found() {
         // Given
@@ -88,6 +136,16 @@ public class CustomerRepositoryTest {
         assertNotNull(captured);
     }
 
+    /**
+     * Tests repository behavior when {@code getItem()} returns null,
+     * meaning the customer does not exist.
+     *
+     * <p>Ensures that:
+     * <ul>
+     *     <li>An appropriate Consumer was still supplied</li>
+     *     <li>{@link Optional#empty()} is returned</li>
+     * </ul>
+     */
     @Test
     void testFindById_NotFound() {
         // When
@@ -101,7 +159,17 @@ public class CustomerRepositoryTest {
         assertNotNull(captured);
     }
 
-
+    /**
+     * Tests that the repository correctly performs a full table scan using
+     * {@link DynamoDbTable#scan()} and aggregates results from {@link PageIterable}.
+     *
+     * <p>Validates that:
+     * <ul>
+     *     <li>Pages and iterators are mocked correctly</li>
+     *     <li>Each page yields the expected Customer objects</li>
+     *     <li>The final list contains all items in order</li>
+     * </ul>
+     */
     @Test
     void testFindAll() {
         // Given
@@ -131,7 +199,13 @@ public class CustomerRepositoryTest {
         assertEquals("cust-456", all.get(1).getCustomerId());
     }
 
-
+    /**
+     * Verifies that the repository calls {@code deleteItem(Consumer)} exactly once
+     * when deleting a customer by ID.
+     *
+     * <p>The test also captures the Consumer to ensure the repository properly builds
+     * the DynamoDB key request.
+     */
     @Test
     void testDeleteById() {
         // When
@@ -146,7 +220,17 @@ public class CustomerRepositoryTest {
         assertNotNull(captured);
     }
 
-
+    /**
+     * Tests lookup by email using the DynamoDB secondary index "email-index".
+     *
+     * <p>Validates that:
+     * <ul>
+     *     <li>The repository accesses the correct index</li>
+     *     <li>A Consumer is passed to {@code query(Consumer)}</li>
+     *     <li>A page containing a single matching customer is processed</li>
+     *     <li>The result is {@link Optional#of(Object)}</li>
+     * </ul>
+     */
     @Test
     void testFindByEmail_Found() {
         // Given
@@ -172,6 +256,16 @@ public class CustomerRepositoryTest {
         assertNotNull(captor.getValue());
     }
 
+    /**
+     * Tests email lookup behavior when the index query returns an empty result.
+     *
+     * <p>Ensures that:
+     * <ul>
+     *     <li>The index is used</li>
+     *     <li>A Consumer request-builder was passed into {@code query()}</li>
+     *     <li>No items were found, resulting in {@link Optional#empty()}</li>
+     * </ul>
+     */
     @Test
     void testFindByEmail_NotFound() {
         // When
@@ -193,7 +287,10 @@ public class CustomerRepositoryTest {
         assertNotNull(captor.getValue());
     }
 
-
+    /**
+     * Utility method for creating a minimal {@link Customer} test object with the
+     * provided ID and default name/email attributes.
+     */
     private Customer constructCustomer(final String customerId) {
         return Customer.builder().customerId(customerId).firstName("John").customerEmail(CUSTOMER_EMAIL).build();
     }
