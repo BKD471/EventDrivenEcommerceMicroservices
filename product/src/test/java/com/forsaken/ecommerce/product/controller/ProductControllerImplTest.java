@@ -3,7 +3,7 @@ package com.forsaken.ecommerce.product.controller;
 
 import com.forsaken.ecommerce.common.exceptions.ProductNotFoundExceptions;
 import com.forsaken.ecommerce.common.responses.ApiResponse;
-import com.forsaken.ecommerce.product.dto.PagedResponse;
+import com.forsaken.ecommerce.common.responses.PagedResponse;
 import com.forsaken.ecommerce.product.dto.ProductPurchaseRequest;
 import com.forsaken.ecommerce.product.dto.ProductPurchaseResponse;
 import com.forsaken.ecommerce.product.dto.ProductRequest;
@@ -33,6 +33,20 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static com.forsaken.ecommerce.product.dto.ProductRequest.Direction;
 
+/**
+ * Unit tests for {@link ProductControllerImpl}, validating controller-layer behavior
+ * and ensuring that it:
+ * <ul>
+ *     <li>Correctly delegates operations to {@link IProductService}</li>
+ *     <li>Correctly delegates to {@link IS3Service} for presigned URL generation</li>
+ *     <li>Builds proper {@link ApiResponse} objects</li>
+ *     <li>Returns the correct HTTP status codes</li>
+ *     <li>Does NOT interact with unrelated services during each endpoint call</li>
+ * </ul>
+ *
+ * <p>All external dependencies are mocked using Mockito to isolate and verify
+ * controller behavior only.
+ */
 @ExtendWith(MockitoExtension.class)
 class ProductControllerImplTest {
 
@@ -51,35 +65,50 @@ class ProductControllerImplTest {
     @Mock
     private ProductPurchaseRequest productPurchaseRequest;
 
-
+    /**
+     * Verifies that {@link ProductControllerImpl#getPresignedUrl(String, String)}
+     * correctly:
+     * <ul>
+     *     <li>Delegates presigned URL generation to {@link IS3Service}</li>
+     *     <li>Returns HTTP 201 (Created)</li>
+     *     <li>Wraps the URL map in a successful {@link ApiResponse}</li>
+     *     <li>Does not interact with {@link IProductService}</li>
+     * </ul>
+     */
     @Test
     void getPresignedUrl_ShouldReturnCreatedWithUrlMap() {
         // given
         final String fileName = "myFile.png";
         final String contentType = "image/png";
         final Map<String, String> urlMap = Map.of("url", "https://upload-url");
-
         when(s3Service.generatePresignedUploadUrl(fileName, contentType))
                 .thenReturn(urlMap);
 
         // when
-        ResponseEntity<ApiResponse<Map<String, String>>> response =
+        final ResponseEntity<ApiResponse<Map<String, String>>> response =
                 controller.getPresignedUrl(fileName, contentType);
 
         // then
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         final var body = response.getBody();
         assertNotNull(body);
-
         assertEquals(ApiResponse.Status.SUCCESS, body.status());
         assertEquals(urlMap, body.data());
         assertEquals("Presigned Url Generated.", body.message());
-
         verify(s3Service).generatePresignedUploadUrl(fileName, contentType);
         verifyNoInteractions(service);
     }
 
-
+    /**
+     * Verifies that {@link ProductControllerImpl#createProduct(ProductRequest)}
+     * correctly:
+     * <ul>
+     *     <li>Delegates product creation to {@link IProductService}</li>
+     *     <li>Returns HTTP 201 (Created)</li>
+     *     <li>Includes the generated product ID in the response body</li>
+     *     <li>Does not interact with {@link IS3Service}</li>
+     * </ul>
+     */
     @Test
     void createProduct_ShouldReturnCreatedWithProductId() throws IOException {
         // given
@@ -94,7 +123,6 @@ class ProductControllerImplTest {
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         final var body = response.getBody();
         assertNotNull(body);
-
         assertEquals(ApiResponse.Status.SUCCESS, body.status());
         assertEquals(generatedId, body.data());
         assertEquals("Product Created", body.message());
@@ -102,13 +130,20 @@ class ProductControllerImplTest {
         verifyNoInteractions(s3Service);
     }
 
-
+    /**
+     * Tests that the controller:
+     * <ul>
+     *     <li>Delegates download URL generation to {@link IS3Service}</li>
+     *     <li>Returns HTTP 201 (Created)</li>
+     *     <li>Returns a successful {@link ApiResponse} wrapping the URL</li>
+     *     <li>Does not interact with {@link IProductService}</li>
+     * </ul>
+     */
     @Test
     void getDownloadUrl_ShouldReturnCreatedWithStringUrl() {
         // given
         final String key = "products/123.png";
         final String url = "https://download-url";
-
         when(s3Service.generatePresignedDownloadUrl(key)).thenReturn(url);
 
         // when
@@ -125,16 +160,24 @@ class ProductControllerImplTest {
         verifyNoInteractions(service);
     }
 
-
+    /**
+     * Verifies purchasing flow through controller:
+     * <ul>
+     *     <li>Delegates to {@link IProductService#purchaseProducts(List, int, int)}</li>
+     *     <li>Returns HTTP 202 (Accepted)</li>
+     *     <li>Returns a paginated purchase response</li>
+     *     <li>Does not interact with {@link IS3Service}</li>
+     * </ul>
+     *
+     * @throws ProductNotFoundExceptions if the service layer indicates missing products
+     */
     @Test
     void purchaseProducts_ShouldReturnAcceptedWithPagedResponse() throws ProductNotFoundExceptions {
         // given
         final List<ProductPurchaseRequest> req = List.of(productPurchaseRequest);
         final int page = 0, size = 10;
-
-        findAll_ShouldReturnOkWithPagedResponse();PagedResponse<ProductPurchaseResponse> paged =
-                new PagedResponse<>(List.of(), 0, 10, 1,1);
-
+        final PagedResponse<ProductPurchaseResponse> paged =
+                new PagedResponse<>(List.of(), 0, 10, 1, 1);
         when(service.purchaseProducts(req, page, size)).thenReturn(paged);
 
         // when
@@ -151,26 +194,25 @@ class ProductControllerImplTest {
         verifyNoInteractions(s3Service);
     }
 
-
+    /**
+     * Tests successful retrieval of a product by ID.
+     *
+     * <p>Ensures that the controller:
+     * <ul>
+     *     <li>Delegates request to {@link IProductService#getProductById(Integer, boolean)}</li>
+     *     <li>Returns HTTP 200 (OK)</li>
+     *     <li>Wraps the product response inside {@link ApiResponse}</li>
+     *     <li>Does not interact with {@link IS3Service}</li>
+     * </ul>
+     *
+     * @throws ProductNotFoundExceptions if the product does not exist
+     */
     @Test
     void findById_ShouldReturnOkWithProductResponse() throws ProductNotFoundExceptions {
         // given
         final Integer productId = 99;
         final Boolean signedUrl = true;
-
-        findAll_ShouldReturnOkWithPagedResponse();ProductResponse productResponse =
-                new ProductResponse(
-                        99,
-                        "Test Product",
-                        "Test Description",
-                        10.0,
-                        BigDecimal.valueOf(199.99),
-                        1,
-                        "Category Name",
-                        "Category Description",
-                        "http://image-url"
-                );
-
+        final ProductResponse productResponse = constructProductResponse(productId);
         when(service.getProductById(productId, signedUrl))
                 .thenReturn(productResponse);
 
@@ -188,14 +230,22 @@ class ProductControllerImplTest {
         verifyNoInteractions(s3Service);
     }
 
-
+    /**
+     * Verifies that fetching all products:
+     * <ul>
+     *     <li>Invokes {@link IProductService#getAllProducts(Boolean, int, int)}</li>
+     *     <li>Returns HTTP 200 (OK)</li>
+     *     <li>Returns a page of product information</li>
+     *     <li>Does not interact with {@link IS3Service}</li>
+     * </ul>
+     */
     @Test
     void findAll_ShouldReturnOkWithPagedResponse() {
         // given
         final Boolean signedUrl = false;
         final int page = 0, size = 20;
         final PagedResponse<ProductResponse> paged =
-                new PagedResponse<>(List.of(), 0, 20, 1,1);
+                new PagedResponse<>(List.of(), 0, 20, 1, 1);
         when(service.getAllProducts(signedUrl, page, size))
                 .thenReturn(paged);
 
@@ -213,7 +263,17 @@ class ProductControllerImplTest {
         verifyNoInteractions(s3Service);
     }
 
-
+    /**
+     * Tests date-range product retrieval.
+     *
+     * <p>Ensures that:
+     * <ul>
+     *     <li>Controller calls {@link IProductService#findAllProducts(LocalDateTime, LocalDateTime, int, int)}</li>
+     *     <li>Responds with HTTP 200 (OK)</li>
+     *     <li>Returns a paginated product list</li>
+     *     <li>Does not interact with {@link IS3Service}</li>
+     * </ul>
+     */
     @Test
     void findAllProducts_ShouldReturnOkWithPagedResponse() {
         // given
@@ -221,7 +281,7 @@ class ProductControllerImplTest {
         final LocalDateTime to = LocalDateTime.now();
         final int page = 0, size = 10;
         final PagedResponse<ProductResponse> paged =
-                new PagedResponse<>(List.of(), 0, 10, 1,1);
+                new PagedResponse<>(List.of(), 0, 10, 1, 1);
         when(service.findAllProducts(from, to, page, size))
                 .thenReturn(paged);
 
@@ -239,7 +299,19 @@ class ProductControllerImplTest {
         verifyNoInteractions(s3Service);
     }
 
-
+    /**
+     * Tests category-based product filtering with price direction.
+     *
+     * <p>Ensures that:
+     * <ul>
+     *     <li>Controller delegates to {@link IProductService#findAllProductsByCategory(Integer, BigDecimal, Direction, int, int)}</li>
+     *     <li>Returns HTTP 200 (OK)</li>
+     *     <li>Returns the expected {@link PagedResponse}</li>
+     *     <li>Does not interact with {@link IS3Service}</li>
+     * </ul>
+     *
+     * @throws CategoryNotFoundExceptions if the referenced category does not exist
+     */
     @Test
     void findAllProductsByCategory_ShouldReturnOkWithPaged() throws CategoryNotFoundExceptions {
         // given
@@ -248,7 +320,7 @@ class ProductControllerImplTest {
         final Direction direction = Direction.GE;
         final int page = 0, size = 10;
         final PagedResponse<ProductResponse> paged =
-                new PagedResponse<>(List.of(), 0, 10, 1,1);
+                new PagedResponse<>(List.of(), 0, 10, 1, 1);
         when(service.findAllProductsByCategory(categoryId, price, direction, page, size))
                 .thenReturn(paged);
 
@@ -264,5 +336,26 @@ class ProductControllerImplTest {
         assertEquals("Fetched All Products By Category:category.", body.message());
         verify(service).findAllProductsByCategory(categoryId, price, direction, page, size);
         verifyNoInteractions(s3Service);
+    }
+
+    /**
+     * Utility method for constructing a valid {@link ProductResponse}
+     * object used across tests.
+     *
+     * @param productId the ID assigned to the test product
+     * @return a fully populated {@link ProductResponse} instance
+     */
+    private ProductResponse constructProductResponse(final int productId) {
+        return ProductResponse.builder()
+                .id(productId)
+                .name("Test Product")
+                .description("Test Description")
+                .availableQuantity(10.0)
+                .price(BigDecimal.valueOf(199.99))
+                .categoryId(1)
+                .categoryName("Category Name")
+                .categoryDescription("Category Description")
+                .imageUrl("http://image-url")
+                .build();
     }
 }

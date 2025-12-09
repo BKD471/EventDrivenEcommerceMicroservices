@@ -20,13 +20,37 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests for {@link IProductRepository}, verifying that custom repository
+ * query methods behave as expected when invoked.
+ *
+ * <p>All interactions with the repository are mocked using Mockito, ensuring that
+ * the test suite focuses on verifying:
+ * <ul>
+ *     <li>Correct method invocations</li>
+ *     <li>Correct parameter passing</li>
+ *     <li>Expected return values</li>
+ * </ul>
+ *
+ * <p>Since this is a pure repository mock test (no database involved), it validates
+ * method signatures, mapping consistency, and contract expectations.
+ */
 @ExtendWith(MockitoExtension.class)
 class ProductRepositoryTest {
 
     @Mock
     private IProductRepository repository;
 
-
+    /**
+     * Verifies that {@link IProductRepository#findAllByIdInOrderById(List)}
+     * returns the expected list of products when invoked with a list of IDs.
+     *
+     * <p>Ensures:
+     * <ul>
+     *     <li>The repository is called with the correct argument</li>
+     *     <li>The returned product list matches the mocked response</li>
+     * </ul>
+     */
     @Test
     void findAllByIdInOrderById_ShouldReturnProducts() {
         // Given
@@ -42,7 +66,16 @@ class ProductRepositoryTest {
         verify(repository).findAllByIdInOrderById(ids);
     }
 
-
+    /**
+     * Verifies that {@link IProductRepository#findAllWithCategory(Pageable)}
+     * returns a paginated list of products when invoked with a pageable request.
+     *
+     * <p>Ensures:
+     * <ul>
+     *     <li>Pagination is passed correctly</li>
+     *     <li>The returned {@link Page} object matches the stubbed data</li>
+     * </ul>
+     */
     @Test
     void findAllWithCategory_ShouldReturnPagedProducts() {
         // Given
@@ -59,7 +92,16 @@ class ProductRepositoryTest {
         verify(repository).findAllWithCategory(pageable);
     }
 
-
+    /**
+     * Tests that {@link IProductRepository#findAllByAdditionDateBetween(LocalDateTime, LocalDateTime)}
+     * returns all products created within the given date range.
+     *
+     * <p>Ensures:
+     * <ul>
+     *     <li>The repository receives the correct date parameters</li>
+     *     <li>The returned list matches the mocked data</li>
+     * </ul>
+     */
     @Test
     void findAllByAdditionDateBetween_ShouldReturnProducts() {
         // Given
@@ -77,6 +119,16 @@ class ProductRepositoryTest {
     }
 
 
+    /**
+     * Verifies that {@link IProductRepository#findAllByCategoryAndPriceGreaterThanEqual(Category, BigDecimal)}
+     * returns all products whose price is greater than or equal to the provided limit.
+     *
+     * <p>Ensures:
+     * <ul>
+     *     <li>Correct method invocation with category and price</li>
+     *     <li>Returned product list matches the expectation</li>
+     * </ul>
+     */
     @Test
     void findAllByCategoryAndPriceGreaterThanEqual_ShouldReturnProducts() {
         // Given
@@ -95,7 +147,16 @@ class ProductRepositoryTest {
         verify(repository).findAllByCategoryAndPriceGreaterThanEqual(category, price);
     }
 
-
+    /**
+     * Verifies that {@link IProductRepository#findAllByCategoryAndPriceLessThanEqual(Category, BigDecimal)}
+     * returns all products priced less than or equal to the provided amount.
+     *
+     * <p>Ensures:
+     * <ul>
+     *     <li>The repository receives the correct category and price parameters</li>
+     *     <li>The returned product list is exactly the mocked result</li>
+     * </ul>
+     */
     @Test
     void findAllByCategoryAndPriceLessThanEqual_ShouldReturnProducts() {
         // Given
