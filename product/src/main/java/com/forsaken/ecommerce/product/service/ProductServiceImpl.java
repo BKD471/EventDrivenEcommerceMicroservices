@@ -1,7 +1,7 @@
 package com.forsaken.ecommerce.product.service;
 
 import com.forsaken.ecommerce.common.exceptions.ProductNotFoundExceptions;
-import com.forsaken.ecommerce.product.dto.PagedResponse;
+import com.forsaken.ecommerce.common.responses.PagedResponse;
 import com.forsaken.ecommerce.product.dto.ProductPurchaseRequest;
 import com.forsaken.ecommerce.product.dto.ProductPurchaseResponse;
 import com.forsaken.ecommerce.product.dto.ProductRequest;

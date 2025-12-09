@@ -26,7 +26,23 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
-
+/**
+ * Unit tests for {@link S3ServiceImpl}, validating correct generation of
+ * AWS S3 presigned upload and download URLs using {@link S3Presigner}.
+ *
+ * <p>This test class ensures:
+ * <ul>
+ *     <li>The presigned upload and download URL generation flows are executed correctly</li>
+ *     <li>Correct S3 bucket and expiration properties are used</li>
+ *     <li>Appropriate exceptions are thrown when AWS SDK returns invalid or null responses</li>
+ *     <li>Keys for uploaded files are generated with proper prefixes and formatting</li>
+ * </ul>
+ *
+ * <p>All AWS interactions are fully mocked using Mockito to isolate service logic.
+ *
+ * <p>{@code Strictness.LENIENT} is intentionally used to allow relaxed stubbing for
+ * AWS-related behaviors that are internal to builder consumers.
+ */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class S3ServiceImplTest {
@@ -50,6 +66,19 @@ class S3ServiceImplTest {
         s3Service = new S3ServiceImpl(s3Properties, presigner);
     }
 
+    /**
+     * Verifies that a valid presigned upload URL is generated when AWS correctly
+     * returns a non-null {@link PresignedPutObjectRequest} containing a URL.
+     *
+     * <p>Ensures that:
+     * <ul>
+     *     <li>The generated upload URL matches the mocked AWS value</li>
+     *     <li>A properly formatted S3 key is created (prefix + UUID + filename suffix)</li>
+     *     <li>The returned map contains both the upload URL and the generated key</li>
+     * </ul>
+     *
+     * @throws Exception if URL creation fails (only for test setup)
+     */
     @Test
     void generatePresignedUploadUrl_ShouldReturnUrlAndKey() throws Exception {
         // Given
@@ -80,6 +109,12 @@ class S3ServiceImplTest {
         assertTrue(result.get("key").endsWith("_photo.png"));
     }
 
+    /**
+     * Ensures that the service throws {@link IllegalStateException} when AWS SDK
+     * returns {@code null} instead of a valid {@link PresignedPutObjectRequest}.
+     *
+     * <p>This validates defensive error handling against unexpected AWS behavior.
+     */
     @Test
     void generatePresignedUploadUrl_ShouldThrowIllegalState_WhenPresignerReturnsNull() {
         // Given
@@ -99,7 +134,12 @@ class S3ServiceImplTest {
         assertEquals("Unable to generate presigned upload URL", exception.getMessage());
     }
 
-
+    /**
+     * Ensures the service throws {@link IllegalStateException} when AWS returns a
+     * {@link PresignedPutObjectRequest} whose internal URL is {@code null}.
+     *
+     * <p>This prevents the application from returning invalid or unusable upload URLs.
+     */
     @Test
     void generatePresignedUploadUrl_ShouldThrowIllegalState_WhenPresignerReturnsUrlNull() {
         // Given
@@ -129,6 +169,18 @@ class S3ServiceImplTest {
         assertEquals("Unable to generate presigned upload URL", exception.getMessage());
     }
 
+    /**
+     * Validates that the download presigned URL generation succeeds when AWS
+     * returns a valid {@link PresignedGetObjectRequest} with a non-null URL.
+     *
+     * <p>Ensures that:
+     * <ul>
+     *     <li>The returned value matches the mocked signed URL</li>
+     *     <li>The AWS builder consumer simulation is executed correctly</li>
+     * </ul>
+     *
+     * @throws Exception for URL initialization inside the test
+     */
     @Test
     void generatePresignedDownloadUrl_ShouldReturnPresignedUrl() throws Exception {
         // Given
@@ -156,6 +208,12 @@ class S3ServiceImplTest {
         assertEquals("https://s3.com/download-url", resultUrl);
     }
 
+    /**
+     * Ensures that an {@link IllegalStateException} is thrown when AWS returns
+     * {@code null} instead of a valid {@link PresignedGetObjectRequest}.
+     *
+     * <p>This validates error handling for download URL generation failures.
+     */
     @Test
     void generatePresignedDownloadUrl_ShouldThrowIllegalState_WhenPresignerReturnsNull() {
         // Given
@@ -176,6 +234,12 @@ class S3ServiceImplTest {
         assertEquals("Unable to generate presigned download URL", exception.getMessage());
     }
 
+    /**
+     * Ensures that the service throws {@link IllegalStateException} when AWS SDK
+     * returns a {@link PresignedGetObjectRequest} whose URL is {@code null}.
+     *
+     * <p>Prevents the API from returning unusable presigned URLs to clients.
+     */
     @Test
     void generatePresignedDownloadUrl_ShouldThrowIllegalState_WhenPresignerReturnsUrlNull() {
         // Given

@@ -2,7 +2,7 @@ package com.forsaken.ecommerce.product.controller;
 
 import com.forsaken.ecommerce.common.exceptions.ProductNotFoundExceptions;
 import com.forsaken.ecommerce.common.responses.ApiResponse;
-import com.forsaken.ecommerce.product.dto.PagedResponse;
+import com.forsaken.ecommerce.common.responses.PagedResponse;
 import com.forsaken.ecommerce.product.dto.ProductPurchaseRequest;
 import com.forsaken.ecommerce.product.dto.ProductPurchaseResponse;
 import com.forsaken.ecommerce.product.dto.ProductRequest;
@@ -28,16 +28,25 @@ import java.util.Map;
 
 import static com.forsaken.ecommerce.product.dto.ProductRequest.Direction;
 
-
+/**
+ * REST controller interface for managing product-related operations such as product
+ * creation, retrieval, purchasing, and generating presigned URLs for S3 interactions.
+ *
+ * <p>All endpoints are prefixed with <b>/api/v1/products</b> and return responses wrapped
+ * inside {@link ApiResponse}, ensuring consistent structure across the API.
+ */
 @RequestMapping("/api/v1/products")
 public interface IProductController {
 
     /**
-     * this service generates presigned url that will be used to upload or download file from S3.
+     * Generates an S3 presigned URL for uploading a file.
      *
-     * @param fileName    - name if file to be uploaded
-     * @param contentType - type of file
-     * @return ApiResponse<?> - acknowledgment that presigned url has been generated with status code.
+     * <p>This endpoint produces a temporary, secure upload URL that clients can use
+     * to upload product images or related assets directly to Amazon S3, bypassing the backend.
+     *
+     * @param fileName    the name of the file to be uploaded; must not be blank
+     * @param contentType the MIME type of the file (e.g., image/png); must not be blank
+     * @return a {@link ResponseEntity} containing an {@link ApiResponse} with a map of key–URL pairs
      */
     @GetMapping("/presigned-url")
     ResponseEntity<ApiResponse<Map<String, String>>> getPresignedUrl(
@@ -47,10 +56,14 @@ public interface IProductController {
 
 
     /**
-     * this service creates product in database.
+     * Creates a new product in the system.
      *
-     * @param productRequest - request to create product
-     * @return ApiResponse<?> - acknowledgment that product has been created in database with status code.
+     * <p>Accepts a {@link ProductRequest} payload and delegates product creation
+     * to the service layer. On success, returns the generated product ID.
+     *
+     * @param productRequest the product creation request payload; must be valid
+     * @return a {@link ResponseEntity} containing an {@link ApiResponse} with the product ID
+     * @throws IOException if an I/O operation occurs while processing the product creation
      */
     @PostMapping(value = "/create")
     ResponseEntity<ApiResponse<Integer>> createProduct(
@@ -58,22 +71,29 @@ public interface IProductController {
 
 
     /**
-     * this service generates presigned url that will be used to upload or download file from S3..
+     * Generates an S3 presigned URL for downloading a file.
      *
-     * @param key - request to create product
-     * @return ApiResponse<?> - url to download file from S3.
+     * <p>This URL allows clients to securely access protected S3 objects without exposing AWS credentials.
+     *
+     * @param key the S3 object key representing the file to be downloaded; must not be blank
+     * @return a {@link ResponseEntity} containing an {@link ApiResponse} with the download URL
      */
     @GetMapping("/download-url")
     ResponseEntity<ApiResponse<String>> getDownloadUrl(@NotBlank @RequestParam(name = "key") final String key);
 
 
     /**
-     * this service purchase products from database.
+     * Purchases one or more products.
      *
-     * @param request - request to purchase product
-     * @param page    - index of page starts from 1
-     * @param size    - no of elements per each page
-     * @return ApiResponse<?> - acknowledgment that product has been purchased from database with status code.
+     * <p>This endpoint updates product quantities and returns a paginated summary
+     * of purchase details. If any requested product cannot be found, an exception is thrown.
+     *
+     * @param request list of purchase requests; must be valid
+     * @param page    page index starting from 1
+     * @param size    number of items per page
+     * @return a {@link ResponseEntity} with an {@link ApiResponse} containing a paginated
+     *         {@link PagedResponse} of purchase results
+     * @throws ProductNotFoundExceptions if any product in the request is not found
      */
     @PostMapping("/purchase")
     ResponseEntity<ApiResponse<PagedResponse<ProductPurchaseResponse>>> purchaseProducts(
@@ -84,11 +104,14 @@ public interface IProductController {
 
 
     /**
-     * this service fetches product information by id
+     * Retrieves product details by product ID.
      *
-     * @param productId - id of product
-     * @param signedUrl - is signedUrl or not for viewing/downloading product image
-     * @return ApiResponse<?>   - product information with status code.
+     * <p>Optionally returns signed URLs for the product's image if {@code signedUrl} is true.
+     *
+     * @param productId the ID of the product; must not be null
+     * @param signedUrl whether to include signed URLs for product images
+     * @return a {@link ResponseEntity} containing an {@link ApiResponse} with the product details
+     * @throws ProductNotFoundExceptions if the product is not found
      */
     @GetMapping("/{product-id}")
     ResponseEntity<ApiResponse<ProductResponse>> findById(
@@ -98,12 +121,14 @@ public interface IProductController {
 
 
     /**
-     * this service fetches all products from database.
+     * Retrieves a paginated list of all products.
      *
-     * @param signedUrl - is signedUrl or not for viewing/downloading product image
-     * @param page      - index of page starts from 1
-     * @param size      - no of elements per each page
-     * @return ApiResponse<?> - page of all product information with status code.
+     * <p>Supports optional signed URL generation for product images.
+     *
+     * @param signedUrl whether to include signed URLs for product images
+     * @param page      page index starting from 1
+     * @param size      number of products per page
+     * @return a {@link ResponseEntity} with an {@link ApiResponse} wrapping a page of product data
      */
     @GetMapping
     ResponseEntity<ApiResponse<PagedResponse<ProductResponse>>> findAll(
@@ -114,13 +139,16 @@ public interface IProductController {
 
 
     /**
-     * this service fetches all products from database that created between fromDate & endDate.
+     * Retrieves all products created between the specified date range.
      *
-     * @param fromDate - beginning point of search when product was created
-     * @param toDate   - ending point of search when product was created
-     * @param page     - index of page starts from 1
-     * @param size     - no of elements per each page
-     * @return ApiResponse<?> - page of all product information with status code.
+     * <p>If {@code fromDate} or {@code toDate} is omitted, the service applies flexible filtering.
+     *
+     * @param fromDate the start of the creation date range; optional
+     * @param toDate   the end of the creation date range; optional
+     * @param page     page index starting from 1
+     * @param size     number of products per page
+     * @return a {@link ResponseEntity} with an {@link ApiResponse} containing a paginated list
+     *         of matching products
      */
     @GetMapping("/findAll")
     ResponseEntity<ApiResponse<PagedResponse<ProductResponse>>> findAllProducts(
@@ -136,14 +164,21 @@ public interface IProductController {
 
 
     /**
-     * this service fetches all products from database that has the category and price limit wised by client..
+     * Retrieves products filtered by category and price conditions.
      *
-     * @param categoryId - id of category of that product client needs
-     * @param price      - price limit to which we search
-     * @param direction  - direction of search, either less than equals price or greater than equals price
-     * @param page       - index of page starts from 1
-     * @param size       - no of elements per each page
-     * @return ApiResponse<?> - page of all product information that falls under this category and has price limit with status code.
+     * <p>The price filter supports direction-based comparison:
+     * <ul>
+     *     <li>{@code LE} – less than or equal to the price</li>
+     *     <li>{@code GE} – greater than or equal to the price</li>
+     * </ul>
+     *
+     * @param categoryId the category ID; must not be null
+     * @param price      the comparison price value; defaults to 100
+     * @param direction  comparison direction for price filtering; defaults to {@code GE}
+     * @param page       page index starting from 1
+     * @param size       items per page
+     * @return a {@link ResponseEntity} containing an {@link ApiResponse} with paginated product data
+     * @throws CategoryNotFoundExceptions if the category does not exist
      */
     @GetMapping("/category/{categoryId}")
     ResponseEntity<ApiResponse<PagedResponse<ProductResponse>>> findAllProductsByCategory(

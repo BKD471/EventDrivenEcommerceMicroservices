@@ -2,7 +2,7 @@ package com.forsaken.ecommerce.product.service;
 
 
 import com.forsaken.ecommerce.common.exceptions.ProductNotFoundExceptions;
-import com.forsaken.ecommerce.product.dto.PagedResponse;
+import com.forsaken.ecommerce.common.responses.PagedResponse;
 import com.forsaken.ecommerce.product.dto.ProductPurchaseRequest;
 import com.forsaken.ecommerce.product.dto.ProductPurchaseResponse;
 import com.forsaken.ecommerce.product.dto.ProductRequest;
@@ -35,6 +35,23 @@ import static org.mockito.Mockito.when;
 
 import static com.forsaken.ecommerce.product.dto.ProductRequest.Direction;
 
+/**
+ * Unit tests for {@link ProductServiceImpl}, validating the service-layer business logic
+ * for product creation, retrieval, category filtering, date filtering, S3 presigned URL
+ * enrichment, and transactional product purchasing.
+ *
+ * <p>All external dependencies such as repositories and S3 services are mocked using Mockito
+ * to isolate pure service logic and verify:
+ * <ul>
+ *     <li>Correct delegation to repositories</li>
+ *     <li>Correct exception throwing for invalid scenarios</li>
+ *     <li>Accurate business transformations and updates</li>
+ *     <li>Proper stock validation during purchases</li>
+ *     <li>S3 URL enrichment when enabled</li>
+ * </ul>
+ *
+ * <p>This class ensures high reliability of the core product management behavior.
+ */
 @ExtendWith(MockitoExtension.class)
 class ProductServiceImplTest {
 
@@ -51,6 +68,16 @@ class ProductServiceImplTest {
     private ProductServiceImpl service;
 
 
+    /**
+     * Tests that a new product is successfully created.
+     *
+     * <p>Ensures that:
+     * <ul>
+     *     <li>The request is converted to a {@link Product} entity</li>
+     *     <li>The product is saved through the repository</li>
+     *     <li>The returned ID matches the saved entity</li>
+     * </ul>
+     */
     @Test
     void createProduct_ShouldSaveAndReturnId() {
         // Given
@@ -67,7 +94,15 @@ class ProductServiceImplTest {
         verify(productRepository).save(product);
     }
 
-
+    /**
+     * Verifies that when signed URLs are enabled, the service:
+     * <ul>
+     *     <li>Fetches paginated products with categories</li>
+     *     <li>Generates presigned download URLs for product images</li>
+     *     <li>Mutates the product entity to contain the signed URL</li>
+     *     <li>Returns a {@link PagedResponse} containing the enriched DTOs</li>
+     * </ul>
+     */
     @Test
     void getAllProducts_ShouldReturnSignedUrls_WhenEnabled() {
         // Given
@@ -89,7 +124,18 @@ class ProductServiceImplTest {
         verify(s3Service).generatePresignedDownloadUrl("image-key");
     }
 
-
+    /**
+     * Ensures that the service returns a full {@link ProductResponse} for a valid product ID.
+     *
+     * <p>Checks that:
+     * <ul>
+     *     <li>The product is retrieved correctly from the repository</li>
+     *     <li>A signed image URL is generated when requested</li>
+     *     <li>Entity fields are correctly mapped into the DTO</li>
+     * </ul>
+     *
+     * @throws ProductNotFoundExceptions if the product is missing (not expected here)
+     */
     @Test
     void getProductById_ShouldReturnResponse_WhenProductExists() throws ProductNotFoundExceptions {
         // Given
@@ -107,7 +153,10 @@ class ProductServiceImplTest {
         verify(s3Service).generatePresignedDownloadUrl("image-key");
     }
 
-
+    /**
+     * Ensures that the service throws {@link ProductNotFoundExceptions}
+     * when attempting to fetch a non-existent product.
+     */
     @Test
     void getProductById_ShouldThrow_WhenNotFound() {
         // Given
@@ -118,7 +167,12 @@ class ProductServiceImplTest {
                 () -> service.getProductById(10, false));
     }
 
-
+    /**
+     * Ensures that the purchase operation fails when the number of retrieved products
+     * does not match the number of requested product IDs.
+     *
+     * <p>This validates the integrity rule: every requested product must exist.
+     */
     @Test
     void purchaseProducts_ShouldThrow_WhenMismatchInIds() {
         // Given
@@ -132,7 +186,12 @@ class ProductServiceImplTest {
                 () -> service.purchaseProducts(List.of(productPurchaseRequest), 1, 10));
     }
 
-
+    /**
+     * Ensures that the service throws {@link ProductNotFoundExceptions} when
+     * attempting to purchase a quantity greater than the available stock.
+     *
+     * <p>Validates the business rule enforcing stock sufficiency.
+     */
     @Test
     void purchaseProducts_ShouldThrow_WhenStockInsufficient() {
         // Given
@@ -149,7 +208,16 @@ class ProductServiceImplTest {
                 () -> service.purchaseProducts(List.of(productPurchaseRequest), 1, 10));
     }
 
-
+    /**
+     * Verifies that a successful product purchase:
+     * <ul>
+     *     <li>Loads all required products</li>
+     *     <li>Validates available stock</li>
+     *     <li>Updates inventory quantities correctly</li>
+     *     <li>Saves updated product state</li>
+     *     <li>Returns a {@link PagedResponse} containing purchase results</li>
+     * </ul>
+     */
     @Test
     void purchaseProducts_ShouldReturnPagedResponse_WhenSuccessful() throws ProductNotFoundExceptions {
         // Given
@@ -171,7 +239,15 @@ class ProductServiceImplTest {
         assertEquals(3, product.getAvailableQuantity());
     }
 
-
+    /**
+     * Ensures correct filtering of products using a creation-date range.
+     *
+     * <p>Verifies:
+     * <ul>
+     *     <li>Repository receives the exact from/to timestamps</li>
+     *     <li>The resulting {@link PagedResponse} contains the correct values</li>
+     * </ul>
+     */
     @Test
     void findAllProducts_ShouldReturnPagedResponse() {
         // Given
@@ -193,7 +269,10 @@ class ProductServiceImplTest {
         assertEquals(1, response.totalElements());
     }
 
-
+    /**
+     * Ensures that category-based filtering throws {@link CategoryNotFoundExceptions}
+     * when the requested category ID does not exist.
+     */
     @Test
     void findAllProductsByCategory_ShouldThrow_WhenCategoryMissing() {
         // Given
@@ -205,7 +284,18 @@ class ProductServiceImplTest {
         );
     }
 
-
+    /**
+     * Tests price-based filtering for category search using {@code Direction.GE}
+     * (greater-than-or-equal).
+     *
+     * <p>Ensures:
+     * <ul>
+     *     <li>Category lookup succeeds</li>
+     *     <li>Repository is queried with the correct parameters</li>
+     *     <li>The DTO conversion is correct</li>
+     *     <li>The paginated response contains accurate mapping</li>
+     * </ul>
+     */
     @Test
     void findAllProductsByCategory_ShouldReturnPaged_GreaterThanEqual() throws CategoryNotFoundExceptions {
         // Given
@@ -230,7 +320,13 @@ class ProductServiceImplTest {
         assertEquals(category.getId(), dto.categoryId());
     }
 
-
+    /**
+     * Tests price-based filtering for category search using {@code Direction.LE}
+     * (less-than-or-equal).
+     *
+     * <p>Ensures that repository results are correctly wrapped in a
+     * {@link PagedResponse}.
+     */
     @Test
     void findAllProductsByCategory_ShouldReturnPaged_LessThanEqual() throws CategoryNotFoundExceptions {
         // Given
@@ -248,6 +344,13 @@ class ProductServiceImplTest {
         assertEquals(1, response.totalElements());
     }
 
+    /**
+     * Utility method for constructing a fully populated {@link Product} entity
+     * used across test cases.
+     *
+     * @return a preconfigured {@link Product} instance with ID, name, category,
+     *         available quantity, price, and image key
+     */
     private Product constructProduct() {
         return Product.builder()
                 .id(1)
@@ -260,6 +363,11 @@ class ProductServiceImplTest {
                 .build();
     }
 
+    /**
+     * Utility method for creating a simple {@link Category} entity used in tests.
+     *
+     * @return a {@link Category} with a predefined ID and name
+     */
     private Category constructCategory() {
         return Category.builder()
                 .id(1)
