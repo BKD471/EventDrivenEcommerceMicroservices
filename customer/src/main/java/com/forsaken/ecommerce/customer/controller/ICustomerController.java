@@ -17,7 +17,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-
+/**
+ * REST controller contract for managing Customer resources.
+ *
+ * <p>This interface defines operations for creating, updating, retrieving,
+ * validating, and deleting customers within the system. All responses are wrapped
+ * inside a standardized {@link ApiResponse} format and returned via
+ * {@link ResponseEntity} for proper HTTP semantics.
+ *
+ * <p>Validations such as `@NotBlank`, `@NotNull`, and `@Valid` ensure that incoming
+ * request payloads and path variables meet structural requirements before reaching
+ * the service layer.
+ */
 @RequestMapping("/api/v1/customers")
 public interface ICustomerController {
 
