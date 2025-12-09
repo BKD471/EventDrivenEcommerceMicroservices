@@ -18,6 +18,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDateTime;
 
+/**
+ * REST controller contract for managing payment operations.
+ *
+ * <p>This interface defines endpoints for creating payments, retrieving
+ * payment summaries grouped by payment method, and fetching paginated
+ * payment records with optional date-range filters.</p>
+ *
+ * <p>All responses are wrapped in a standardized {@link ApiResponse}
+ * structure to ensure consistency across the API.</p>
+ */
 @RequestMapping("/api/v1/payments")
 public interface IPaymentController {
 

@@ -7,6 +7,14 @@ import com.forsaken.ecommerce.payment.model.Payment;
 
 import java.time.LocalDateTime;
 
+/**
+ * Service interface defining the core business operations for managing payments.
+ *
+ * <p>This interface abstracts payment-related operations such as payment creation,
+ * generating aggregated summaries, and retrieving paginated payment records with
+ * optional date filtering. Implementations are responsible for applying business
+ * rules, validations, and orchestrating repository operations.</p>
+ */
 public interface IPaymentService {
 
 

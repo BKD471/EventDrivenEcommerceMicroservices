@@ -27,19 +27,50 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 /**
- * Unit tests for PaymentControllerImpl.
+ * Unit tests for {@link PaymentControllerImpl}, verifying controller-layer behavior
+ * and ensuring correct interaction with the {@link IPaymentService}.
+ *
+ * <p>These tests mock the service layer to isolate controller logic and validate:
+ * <ul>
+ *     <li>Correct HTTP status mapping</li>
+ *     <li>Proper construction of {@link ApiResponse} objects</li>
+ *     <li>Correct delegation of calls to {@link IPaymentService}</li>
+ *     <li>No unintended interactions with the service layer</li>
+ * </ul>
+ *
+ * <p>The tests do not cover validation annotations or serialization concerns,
+ * as those responsibilities belong to Spring MVC and separate integration tests.</p>
  */
 class PaymentControllerImplTest {
 
     private IPaymentService paymentService;
     private PaymentControllerImpl controller;
 
+    /**
+     * Initializes mocks and the controller before each test.
+     *
+     * <p>Uses a mocked {@link IPaymentService} to ensure controller behavior
+     * is tested in isolation.</p>
+     */
     @BeforeEach
     void setUp() {
         paymentService = mock(IPaymentService.class);
         controller = new PaymentControllerImpl(paymentService);
     }
 
+    /**
+     * Verifies that {@link PaymentControllerImpl#createPayment(PaymentRequest)}
+     * returns HTTP 201 (Created) and a successful {@link ApiResponse} when the
+     * service successfully creates a payment.
+     *
+     * <p>This test ensures:</p>
+     * <ul>
+     *     <li>The controller passes the request to the service</li>
+     *     <li>The returned payment ID is included in the response</li>
+     *     <li>The correct success message is used</li>
+     *     <li>No additional service calls are made</li>
+     * </ul>
+     */
     @Test
     void createPayment_ReturnsCreatedAndApiResponse() {
         // Given
@@ -69,6 +100,18 @@ class PaymentControllerImplTest {
         verifyNoMoreInteractions(paymentService);
     }
 
+    /**
+     * Validates that {@link PaymentControllerImpl#getPaymentSummary(LocalDateTime, LocalDateTime, int, int)}
+     * returns HTTP 201 (Created) and a correctly populated {@link ApiResponse} containing
+     * the payment summary data returned by the service.
+     *
+     * <p>Specifically verifies:</p>
+     * <ul>
+     *     <li>Delegation to the service with correct parameters</li>
+     *     <li>The summary object is passed back unchanged</li>
+     *     <li>The response contains the expected success message</li>
+     * </ul>
+     */
     @Test
     void getPaymentSummary_ReturnsCreatedAndApiResponse() {
         // Given
@@ -97,6 +140,19 @@ class PaymentControllerImplTest {
         verifyNoMoreInteractions(paymentService);
     }
 
+    /**
+     * Ensures that {@link PaymentControllerImpl#getAllPayments(LocalDateTime, LocalDateTime, int, int)}
+     * returns HTTP 201 (Created) along with a successful {@link ApiResponse} containing
+     * paginated payment results.
+     *
+     * <p>This test confirms:</p>
+     * <ul>
+     *     <li>Correct service invocation with all parameters</li>
+     *     <li>The paginated payment result is returned intact</li>
+     *     <li>The expected success message is included</li>
+     *     <li>No additional service-layer interactions occur</li>
+     * </ul>
+     */
     @Test
     void getAllPayments_ReturnsCreatedAndApiResponse() {
         // Given

@@ -3,6 +3,21 @@ package com.forsaken.ecommerce.payment.service;
 import com.forsaken.ecommerce.avro.PaymentConfirmation;
 import org.springframework.messaging.MessagingException;
 
+/**
+ * Service interface responsible for publishing payment-related notifications
+ * to the messaging infrastructure (e.g., Kafka).
+ *
+ * <p>Implementations of this interface handle the serialization and dispatching
+ * of {@link PaymentConfirmation} events to the appropriate topic. This is typically
+ * used to notify downstream services—such as order management, inventory, or email
+ * services—about successful payment processing.</p>
+ *
+ * <p>Depending on the underlying Kafka producer configuration, failures during
+ * publishing may result in runtime exceptions. Implementations may choose to
+ * publish messages synchronously or asynchronously.</p>
+ *
+ * @see PaymentConfirmation
+ */
 public interface INotificationProducerService {
 
     /**
