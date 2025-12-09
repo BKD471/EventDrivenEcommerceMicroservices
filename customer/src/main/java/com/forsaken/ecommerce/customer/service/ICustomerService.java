@@ -5,7 +5,19 @@ import com.forsaken.ecommerce.common.responses.PagedResponse;
 import com.forsaken.ecommerce.customer.dto.CustomerRequest;
 import com.forsaken.ecommerce.customer.dto.CustomerResponse;
 
-
+/**
+ * Service-layer contract for managing customer entities.
+ *
+ * <p>This interface defines the core business operations for creating,
+ * updating, retrieving, validating, and deleting customers. All methods
+ * enforce business rules and may trigger domain-specific exceptions such
+ * as {@link CustomerNotFoundExceptions} when appropriate.</p>
+ *
+ * <p>The service layer acts as the boundary between controller-level request
+ * handling and repository-level persistence operations, ensuring that all
+ * customer-related workflows adhere to validation, consistency, and domain
+ * rules.</p>
+ */
 public interface ICustomerService {
 
     /**
