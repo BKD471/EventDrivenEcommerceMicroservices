@@ -1,13 +1,16 @@
 package com.forsaken.ecommerce.order.order.service;
 
+import com.forsaken.ecommerce.common.exceptions.BusinessException;
 import com.forsaken.ecommerce.common.exceptions.CustomerNotFoundExceptions;
-import com.forsaken.ecommerce.order.customer.CustomerService;
 import com.forsaken.ecommerce.order.customer.ICustomerService;
 import com.forsaken.ecommerce.order.order.dto.OrderRequest;
 import com.forsaken.ecommerce.order.order.dto.OrderResponse;
 import com.forsaken.ecommerce.order.order.model.Order;
 import com.forsaken.ecommerce.order.order.repository.IOrderRepository;
+import com.forsaken.ecommerce.order.orderline.dto.OrderLineRequest;
 import com.forsaken.ecommerce.order.orderline.service.IOrderLineService;
+import com.forsaken.ecommerce.order.product.IProductService;
+import com.forsaken.ecommerce.order.product.PurchaseRequest;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,13 +31,14 @@ public class OrderServiceImpl implements IOrderService {
     private final IOrderRepository orderRepository;
     private final IOrderLineService orderLineService;
     private final ICustomerService customerService;
+    private final IProductService productService;
     private final Class<?> className = OrderServiceImpl.class;
 
     @Override
-    public Integer createOrder(final OrderRequest request) throws ExecutionException, InterruptedException, CustomerNotFoundExceptions {
+    public Integer createOrder(final OrderRequest request) throws ExecutionException, InterruptedException, CustomerNotFoundExceptions, BusinessException {
         log.info("Creating Order Request: {}", request);
         final var fetchedCustomer = customerService.getCustomer(request.customerId());
-        final var fetchedPurchasedProducts = CompletableFuture.completedFuture(Optional.empty()); // TODO call Product Service
+        final var fetchedPurchasedProducts = productService.purchaseProducts(request.products());
         CompletableFuture.allOf(fetchedCustomer, fetchedPurchasedProducts).join();
 
         final var customer = fetchedCustomer.get()
@@ -46,7 +50,16 @@ public class OrderServiceImpl implements IOrderService {
         final var purchasedProducts = fetchedPurchasedProducts.get();
         final var order = this.orderRepository.save(request.toOrder());
 
-        // TODO save order line
+        for (final PurchaseRequest purchaseRequest : request.products()) {
+            orderLineService.saveOrderLine(
+                    new OrderLineRequest(
+                            null,
+                            order.getId(),
+                            purchaseRequest.productId(),
+                            purchaseRequest.quantity()
+                    )
+            );
+        }
 
         // TODO call payment service
 

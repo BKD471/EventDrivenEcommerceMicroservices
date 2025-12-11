@@ -1,5 +1,6 @@
 package com.forsaken.ecommerce.order.order.controller;
 
+import com.forsaken.ecommerce.common.exceptions.BusinessException;
 import com.forsaken.ecommerce.common.exceptions.CustomerNotFoundExceptions;
 import com.forsaken.ecommerce.common.responses.ApiResponse;
 import com.forsaken.ecommerce.order.order.dto.OrderRequest;
@@ -21,25 +22,55 @@ import java.util.concurrent.ExecutionException;
 /**
  * REST controller interface for managing Orders within the system.
  * <p>
- * Provides endpoints for creating orders, retrieving all orders,
- * fetching orders for a specific customer, and retrieving an order by its ID.
+ * Exposes endpoints for creating new orders, retrieving all existing orders,
+ * fetching orders for a specific customer, and retrieving an individual order
+ * by its unique identifier.
+ * </p>
+ *
+ * <p>
+ * Implementations of this interface should be annotated with
+ * {@code @RestController} and responsible for delegating business logic to the
+ * appropriate service layer.
  * </p>
  */
 @RequestMapping("/api/v1/orders")
 public interface IOrderController {
 
     /**
-     * Creates a new order.
+     * Creates a new order based on the provided request payload.
+     * <p>
+     * Performs validation on the input request, delegates order creation logic
+     * to the service layer, and returns the generated order ID wrapped inside
+     * an {@link ApiResponse}. The response is encapsulated in a
+     * {@link ResponseEntity} with an appropriate HTTP status.
+     * </p>
      *
-     * @param request the order creation payload, validated before processing
-     * @return {@link ResponseEntity} containing the created order ID wrapped in {@link ApiResponse}
-     * @throws ExecutionException   if async processing of order creation fails
-     * @throws InterruptedException if the current thread is interrupted while waiting
+     * <p><b>Error Handling:</b></p>
+     * <ul>
+     *     <li>{@link CustomerNotFoundExceptions} – thrown when the referenced customer does not exist.</li>
+     *     <li>{@link BusinessException} – thrown when business rules such as stock availability,
+     *         pricing validation, or product constraints are violated.</li>
+     *     <li>{@link ExecutionException} – thrown if asynchronous operations
+     *         (e.g., event publishing during order creation) fail.</li>
+     *     <li>{@link InterruptedException} – thrown if the thread is interrupted
+     *         during asynchronous processing.</li>
+     * </ul>
+     *
+     * @param request the order creation payload containing customer ID, product line items,
+     *                and payment/metadata fields; must be valid and non-null.
+     *
+     * @return a {@link ResponseEntity} containing an {@link ApiResponse} wrapper
+     *         around the newly created order ID.
+     *
+     * @throws ExecutionException         if async processing of order creation fails
+     * @throws InterruptedException       if the current thread is interrupted
+     * @throws CustomerNotFoundExceptions if the referenced customer does not exist
+     * @throws BusinessException          if any business rule validation fails
      */
     @PostMapping
     ResponseEntity<ApiResponse<Integer>> createOrder(
             @RequestBody @Valid final OrderRequest request
-    ) throws ExecutionException, InterruptedException, CustomerNotFoundExceptions;
+    ) throws ExecutionException, InterruptedException, CustomerNotFoundExceptions, BusinessException;
 
     /**
      * Retrieves all orders stored in the system.
