@@ -9,6 +9,8 @@ import com.forsaken.ecommerce.order.order.model.Order;
 import com.forsaken.ecommerce.order.order.repository.IOrderRepository;
 import com.forsaken.ecommerce.order.orderline.dto.OrderLineRequest;
 import com.forsaken.ecommerce.order.orderline.service.IOrderLineService;
+import com.forsaken.ecommerce.order.payment.IPaymentService;
+import com.forsaken.ecommerce.order.payment.PaymentRequest;
 import com.forsaken.ecommerce.order.product.IProductService;
 import com.forsaken.ecommerce.order.product.PurchaseRequest;
 import jakarta.persistence.EntityNotFoundException;
@@ -18,7 +20,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -32,6 +33,7 @@ public class OrderServiceImpl implements IOrderService {
     private final IOrderLineService orderLineService;
     private final ICustomerService customerService;
     private final IProductService productService;
+    private final IPaymentService paymentService;
     private final Class<?> className = OrderServiceImpl.class;
 
     @Override
@@ -48,20 +50,28 @@ public class OrderServiceImpl implements IOrderService {
                         )
                 );
         final var purchasedProducts = fetchedPurchasedProducts.get();
-        final var order = this.orderRepository.save(request.toOrder());
+        final Order order = this.orderRepository.save(request.toOrder());
 
         for (final PurchaseRequest purchaseRequest : request.products()) {
             orderLineService.saveOrderLine(
-                    new OrderLineRequest(
-                            null,
-                            order.getId(),
-                            purchaseRequest.productId(),
-                            purchaseRequest.quantity()
-                    )
+                    OrderLineRequest.builder()
+                            .id(null)
+                            .orderId(order.getId())
+                            .productId(purchaseRequest.productId())
+                            .quantity(purchaseRequest.quantity())
+                            .build()
             );
         }
 
-        // TODO call payment service
+        final PaymentRequest paymentRequest = PaymentRequest.builder()
+                .amount(request.amount())
+                .paymentMethod(request.paymentMethod())
+                .orderId(order.getId())
+                .orderReference(order.getReference())
+                .build();
+
+        paymentService.pay(paymentRequest);
+        log.info("Sent Payment");
 
         // TODO create order confirmation avro object for publishinging to kafka
 

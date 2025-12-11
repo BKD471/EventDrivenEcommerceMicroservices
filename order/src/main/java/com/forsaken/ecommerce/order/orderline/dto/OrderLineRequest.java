@@ -2,7 +2,9 @@ package com.forsaken.ecommerce.order.orderline.dto;
 
 import com.forsaken.ecommerce.order.order.model.Order;
 import com.forsaken.ecommerce.order.orderline.model.OrderLine;
+import lombok.Builder;
 
+@Builder
 public record OrderLineRequest(
         Integer id,
         Integer orderId,
