@@ -33,7 +33,7 @@ public class OrderServiceImpl implements IOrderService {
     @Override
     public Integer createOrder(final OrderRequest request) throws ExecutionException, InterruptedException, CustomerNotFoundExceptions {
         log.info("Creating Order Request: {}", request);
-        final var fetchedCustomer = customerService.getCustomer(request.customerId()); // TODO call customer service;
+        final var fetchedCustomer = customerService.getCustomer(request.customerId());
         final var fetchedPurchasedProducts = CompletableFuture.completedFuture(Optional.empty()); // TODO call Product Service
         CompletableFuture.allOf(fetchedCustomer, fetchedPurchasedProducts).join();
 
