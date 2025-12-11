@@ -1,6 +1,8 @@
 package com.forsaken.ecommerce.order.order.service;
 
 import com.forsaken.ecommerce.common.exceptions.CustomerNotFoundExceptions;
+import com.forsaken.ecommerce.order.customer.CustomerService;
+import com.forsaken.ecommerce.order.customer.ICustomerService;
 import com.forsaken.ecommerce.order.order.dto.OrderRequest;
 import com.forsaken.ecommerce.order.order.dto.OrderResponse;
 import com.forsaken.ecommerce.order.order.model.Order;
@@ -25,12 +27,13 @@ public class OrderServiceImpl implements IOrderService {
 
     private final IOrderRepository orderRepository;
     private final IOrderLineService orderLineService;
+    private final ICustomerService customerService;
     private final Class<?> className = OrderServiceImpl.class;
 
     @Override
     public Integer createOrder(final OrderRequest request) throws ExecutionException, InterruptedException, CustomerNotFoundExceptions {
         log.info("Creating Order Request: {}", request);
-        final var fetchedCustomer = CompletableFuture.completedFuture(Optional.empty()); // TODO call customer service;
+        final var fetchedCustomer = customerService.getCustomer(request.customerId()); // TODO call customer service;
         final var fetchedPurchasedProducts = CompletableFuture.completedFuture(Optional.empty()); // TODO call Product Service
         CompletableFuture.allOf(fetchedCustomer, fetchedPurchasedProducts).join();
 
