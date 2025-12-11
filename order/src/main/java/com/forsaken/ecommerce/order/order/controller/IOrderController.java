@@ -1,5 +1,6 @@
 package com.forsaken.ecommerce.order.order.controller;
 
+import com.forsaken.ecommerce.common.exceptions.CustomerNotFoundExceptions;
 import com.forsaken.ecommerce.common.responses.ApiResponse;
 import com.forsaken.ecommerce.order.order.dto.OrderRequest;
 import com.forsaken.ecommerce.order.order.dto.OrderResponse;
@@ -38,7 +39,7 @@ public interface IOrderController {
     @PostMapping
     ResponseEntity<ApiResponse<Integer>> createOrder(
             @RequestBody @Valid final OrderRequest request
-    ) throws ExecutionException, InterruptedException;
+    ) throws ExecutionException, InterruptedException, CustomerNotFoundExceptions;
 
     /**
      * Retrieves all orders stored in the system.

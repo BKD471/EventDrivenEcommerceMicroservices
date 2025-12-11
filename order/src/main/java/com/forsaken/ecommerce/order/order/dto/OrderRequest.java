@@ -33,7 +33,6 @@ public record OrderRequest(
 ) {
 
     public Order toOrder() {
-
         return Order.builder()
                 .id(this.id())
                 .reference(this.reference())

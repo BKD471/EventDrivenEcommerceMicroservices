@@ -1,24 +1,32 @@
 package com.forsaken.ecommerce.order.order.controller;
 
+import com.forsaken.ecommerce.common.exceptions.CustomerNotFoundExceptions;
 import com.forsaken.ecommerce.common.responses.ApiResponse;
 import com.forsaken.ecommerce.order.order.dto.OrderRequest;
 import com.forsaken.ecommerce.order.order.dto.OrderResponse;
+import com.forsaken.ecommerce.order.order.service.IOrderService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+@RestController
+@RequiredArgsConstructor
 public class OrderControllerImpl implements IOrderController {
 
+    private final IOrderService orderService;
+
     @Override
-    public ResponseEntity<ApiResponse<Integer>> createOrder(final OrderRequest request) throws ExecutionException, InterruptedException {
+    public ResponseEntity<ApiResponse<Integer>> createOrder(final OrderRequest request) throws ExecutionException, InterruptedException, CustomerNotFoundExceptions {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(
                         ApiResponse.<Integer>builder()
                                 .status(ApiResponse.Status.SUCCESS)
-                                .data(null)
+                                .data(orderService.createOrder(request))
                                 .message("Order Created Successfully.")
                                 .build()
                 );
@@ -30,7 +38,7 @@ public class OrderControllerImpl implements IOrderController {
                 .body(
                         ApiResponse.<List<OrderResponse>>builder()
                                 .status(ApiResponse.Status.SUCCESS)
-                                .data(null)
+                                .data(orderService.findAllOrders())
                                 .message("Find All Orders.")
                                 .build()
                 );
@@ -46,7 +54,7 @@ public class OrderControllerImpl implements IOrderController {
                 .body(
                         ApiResponse.<List<OrderResponse>>builder()
                                 .status(ApiResponse.Status.SUCCESS)
-                                .data(null)
+                                .data(orderService.findAllOrdersByCustomerId(customerId, fromDate, toDate))
                                 .message("Find All Orders By Customer Id.")
                                 .build()
                 );
@@ -58,7 +66,7 @@ public class OrderControllerImpl implements IOrderController {
                 .body(
                         ApiResponse.<OrderResponse>builder()
                                 .status(ApiResponse.Status.SUCCESS)
-                                .data(null)
+                                .data(orderService.findById(orderId))
                                 .message("Find By Order Id.")
                                 .build()
                 );
