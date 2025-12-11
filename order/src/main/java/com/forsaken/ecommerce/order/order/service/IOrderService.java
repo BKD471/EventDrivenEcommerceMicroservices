@@ -54,9 +54,7 @@ public interface IOrderService {
      * @param request the order creation payload containing customer ID,
      *                product line items, payment details, and any additional metadata;
      *                must not be null.
-     *
      * @return the unique identifier of the newly created order.
-     *
      * @throws CustomerNotFoundExceptions if the associated customer cannot be found.
      * @throws BusinessException          if validation or business-rule checks fail.
      * @throws ExecutionException         if asynchronous event processing fails.

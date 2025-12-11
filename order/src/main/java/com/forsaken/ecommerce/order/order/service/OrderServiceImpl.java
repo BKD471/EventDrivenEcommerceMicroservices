@@ -131,7 +131,7 @@ public class OrderServiceImpl implements IOrderService {
             return null;
         }
         final Schema DECIMAL_SCHEMA =
-                LogicalTypes.decimal(18, 2) // precision=18, scale=2 (must match your .avsc)
+                LogicalTypes.decimal(18, 2)
                         .addToSchema(Schema.create(Schema.Type.BYTES));
 
         final Conversions.DecimalConversion DECIMAL_CONVERSION =
