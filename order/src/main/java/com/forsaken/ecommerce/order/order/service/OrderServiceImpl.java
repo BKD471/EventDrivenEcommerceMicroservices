@@ -1,8 +1,12 @@
 package com.forsaken.ecommerce.order.order.service;
 
+import com.forsaken.ecommerce.avro.OrderConfirmation;
+import com.forsaken.ecommerce.avro.PaymentMethod;
 import com.forsaken.ecommerce.common.exceptions.BusinessException;
 import com.forsaken.ecommerce.common.exceptions.CustomerNotFoundExceptions;
+import com.forsaken.ecommerce.order.customer.CustomerResponse;
 import com.forsaken.ecommerce.order.customer.ICustomerService;
+import com.forsaken.ecommerce.order.kafka.IOrderProducer;
 import com.forsaken.ecommerce.order.order.dto.OrderRequest;
 import com.forsaken.ecommerce.order.order.dto.OrderResponse;
 import com.forsaken.ecommerce.order.order.model.Order;
@@ -13,11 +17,17 @@ import com.forsaken.ecommerce.order.payment.IPaymentService;
 import com.forsaken.ecommerce.order.payment.PaymentRequest;
 import com.forsaken.ecommerce.order.product.IProductService;
 import com.forsaken.ecommerce.order.product.PurchaseRequest;
+import com.forsaken.ecommerce.order.product.PurchaseResponse;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.Conversions;
+import org.apache.avro.LogicalTypes;
+import org.apache.avro.Schema;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -34,6 +44,7 @@ public class OrderServiceImpl implements IOrderService {
     private final ICustomerService customerService;
     private final IProductService productService;
     private final IPaymentService paymentService;
+    private final IOrderProducer orderProducer;
     private final Class<?> className = OrderServiceImpl.class;
 
     @Override
@@ -51,7 +62,6 @@ public class OrderServiceImpl implements IOrderService {
                 );
         final var purchasedProducts = fetchedPurchasedProducts.get();
         final Order order = this.orderRepository.save(request.toOrder());
-
         for (final PurchaseRequest purchaseRequest : request.products()) {
             orderLineService.saveOrderLine(
                     OrderLineRequest.builder()
@@ -69,14 +79,20 @@ public class OrderServiceImpl implements IOrderService {
                 .orderId(order.getId())
                 .orderReference(order.getReference())
                 .build();
-
         paymentService.pay(paymentRequest);
         log.info("Sent Payment");
 
-        // TODO create order confirmation avro object for publishinging to kafka
-
-        // TODO send/publish Order Confirmation avro object
-
+        final OrderConfirmation orderConfirmation = OrderConfirmation.newBuilder()
+                .setOrderReference(request.reference())
+                .setTotalAmount(convertBigDecimalToBytes(request.amount()))
+                .setPaymentMethod(PaymentMethod.valueOf(request.paymentMethod().name()))
+                .setCustomer(toAvroCustomer(customer))
+                .setProducts(purchasedProducts.stream().map(this::toAvroPurchase).toList())
+                .setTraceId("traceId") // TODO tracing will be done later
+                .build();
+        log.info("Created Order Confirmation: {}", orderConfirmation);
+        orderProducer.sendOrderConfirmation(orderConfirmation);
+        log.info("Sent Order Confirmation");
         return order.getId();
     }
 
@@ -108,5 +124,37 @@ public class OrderServiceImpl implements IOrderService {
         log.info("Finding All Orders By Customer: {}", customerId);
         return orderRepository.findAllByCustomerIdAndCreatedDateBetween(customerId, fromDate, toDate)
                 .stream().map(Order::fromOrder).toList();
+    }
+
+    private ByteBuffer convertBigDecimalToBytes(final BigDecimal value) {
+        if (value == null) {
+            return null;
+        }
+        final Schema DECIMAL_SCHEMA =
+                LogicalTypes.decimal(18, 2) // precision=18, scale=2 (must match your .avsc)
+                        .addToSchema(Schema.create(Schema.Type.BYTES));
+
+        final Conversions.DecimalConversion DECIMAL_CONVERSION =
+                new Conversions.DecimalConversion();
+        return DECIMAL_CONVERSION.toBytes(value, DECIMAL_SCHEMA, DECIMAL_SCHEMA.getLogicalType());
+    }
+
+    private com.forsaken.ecommerce.avro.CustomerResponse toAvroCustomer(final CustomerResponse customer) {
+        return com.forsaken.ecommerce.avro.CustomerResponse.newBuilder()
+                .setId(customer.id())
+                .setFirstname(customer.firstname())
+                .setLastname(customer.lastname())
+                .setEmail(customer.email())
+                .build();
+    }
+
+    private com.forsaken.ecommerce.avro.PurchaseResponse toAvroPurchase(final PurchaseResponse product) {
+        return com.forsaken.ecommerce.avro.PurchaseResponse.newBuilder()
+                .setProductId(product.productId())
+                .setName(product.name())
+                .setDescription(product.description())
+                .setPrice(convertBigDecimalToBytes(product.price()))
+                .setQuantity(product.quantity())
+                .build();
     }
 }
