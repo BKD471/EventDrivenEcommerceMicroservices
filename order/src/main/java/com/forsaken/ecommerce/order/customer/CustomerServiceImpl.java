@@ -12,9 +12,9 @@ import java.util.concurrent.CompletableFuture;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class CustomerService implements ICustomerService {
+public class CustomerServiceImpl implements ICustomerService {
 
-    private final CustomerClient customerClient;
+    private final ICustomerClient customerClient;
 
     @Override
     public CompletableFuture<Optional<CustomerResponse>> getCustomer(final String customerId) {

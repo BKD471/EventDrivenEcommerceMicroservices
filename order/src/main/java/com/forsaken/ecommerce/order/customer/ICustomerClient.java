@@ -35,7 +35,7 @@ import java.util.Optional;
         name = "customer-service",
         url = "${application.config.customer-url}"
 )
-public interface CustomerClient {
+public interface ICustomerClient {
 
     /**
      * Retrieves customer details by their unique ID.
