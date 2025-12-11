@@ -60,7 +60,7 @@ public interface ICustomerService {
      *
      * @param customerId the unique identifier of the customer to retrieve; must not be null
      * @return a {@link CompletableFuture} containing an {@link Optional}
-     *         with the customer data, or empty if not found
+     * with the customer data, or empty if not found
      */
     @Async("appTaskExecutor")
     CompletableFuture<Optional<CustomerResponse>> getCustomer(final String customerId);

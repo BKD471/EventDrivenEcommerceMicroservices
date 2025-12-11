@@ -47,7 +47,7 @@ public interface CustomerClient {
      *
      * @param customerId the unique identifier of the customer to lookup
      * @return an {@link Optional} containing the customer details if found,
-     *         otherwise an empty Optional
+     * otherwise an empty Optional
      */
     @GetMapping("/{customer-id}")
     Optional<CustomerResponse> findCustomerById(@PathVariable("customer-id") String customerId);
