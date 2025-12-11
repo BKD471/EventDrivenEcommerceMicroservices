@@ -32,8 +32,8 @@ public interface IOrderController {
      *
      * @param request the order creation payload, validated before processing
      * @return {@link ResponseEntity} containing the created order ID wrapped in {@link ApiResponse}
-     * @throws ExecutionException      if async processing of order creation fails
-     * @throws InterruptedException    if the current thread is interrupted while waiting
+     * @throws ExecutionException   if async processing of order creation fails
+     * @throws InterruptedException if the current thread is interrupted while waiting
      */
     @PostMapping
     ResponseEntity<ApiResponse<Integer>> createOrder(
@@ -44,7 +44,7 @@ public interface IOrderController {
      * Retrieves all orders stored in the system.
      *
      * @return {@link ResponseEntity} containing a list of {@link OrderResponse}
-     *         wrapped in {@link ApiResponse}
+     * wrapped in {@link ApiResponse}
      */
     @GetMapping
     ResponseEntity<ApiResponse<List<OrderResponse>>> findAll();
@@ -57,20 +57,17 @@ public interface IOrderController {
      * @param fromDate   optional filter for the starting date/time (inclusive)
      * @param toDate     optional filter for the ending date/time (inclusive)
      * @return {@link ResponseEntity} containing a list of matching {@link OrderResponse}
-     *         wrapped in {@link ApiResponse}
+     * wrapped in {@link ApiResponse}
      */
     @GetMapping("/{customerId}")
     ResponseEntity<ApiResponse<List<OrderResponse>>> findAllOrdersByCustomerId(
             @PathVariable("customerId") final String customerId,
 
             @RequestParam(value = "fromDate", required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            final LocalDateTime fromDate,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) final LocalDateTime fromDate,
 
             @RequestParam(value = "toDate", required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            final LocalDateTime toDate
-
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) final LocalDateTime toDate
     );
 
     /**
