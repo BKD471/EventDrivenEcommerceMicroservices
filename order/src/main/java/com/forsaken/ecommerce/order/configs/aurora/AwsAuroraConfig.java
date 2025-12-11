@@ -25,11 +25,9 @@ public class AwsAuroraConfig {
         final SecretsManagerClient client = SecretsManagerClient.builder()
                 .region(region)
                 .build();
-
         final GetSecretValueRequest getSecretValueRequest = GetSecretValueRequest.builder()
                 .secretId(secretName)
                 .build();
-
         final GetSecretValueResponse getSecretValueResponse =
                 client.getSecretValue(getSecretValueRequest);
 

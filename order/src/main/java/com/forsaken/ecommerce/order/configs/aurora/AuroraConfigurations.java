@@ -15,10 +15,10 @@ public class AuroraConfigurations {
 
     @Bean
     public DataSource dataSource() {
-        final String jdbcUrl= String.format("jdbc:postgresql://%s:%s/%s",
-                dbCredentials.host(),dbCredentials.port(),dbCredentials.dbName());
+        final String jdbcUrl = String.format("jdbc:postgresql://%s:%s/%s",
+                dbCredentials.host(), dbCredentials.port(), dbCredentials.dbName());
 
-        DriverManagerDataSource dataSource = new DriverManagerDataSource();
+        final DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName("org.postgresql.Driver");
         dataSource.setUrl(jdbcUrl);
         dataSource.setUsername(dbCredentials.userName());

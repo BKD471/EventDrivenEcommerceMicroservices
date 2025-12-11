@@ -39,10 +39,10 @@ public record KafkaProperties(
         @Max(1500)
         int retryBackOffMs,
 
-        @Pattern(regexp = "^(1|0|-1|all)$",message = "valid values are 0, 1, -1 or all")
+        @Pattern(regexp = "^(1|0|-1|all)$", message = "valid values are 0, 1, -1 or all")
         String ack,
 
-        @Pattern(regexp = "^(gzip|snappy|lz4|zstd|none)$",message = "valid values are gzip, snappy, lz4, zstd or give none for default")
+        @Pattern(regexp = "^(gzip|snappy|lz4|zstd|none)$", message = "valid values are gzip, snappy, lz4, zstd or give none for default")
         String compressionType,
 
         @NotBlank

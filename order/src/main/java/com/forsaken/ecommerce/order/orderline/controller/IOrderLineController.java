@@ -33,9 +33,8 @@ public interface IOrderLineController {
      *
      * @param orderId the unique identifier of the Order whose line items should be fetched;
      *                must not be {@code null}
-     *
      * @return a {@link ResponseEntity} containing an {@link ApiResponse} wrapping
-     *         the list of {@link OrderLineResponse}
+     * the list of {@link OrderLineResponse}
      *
      * <p><b>Possible Responses:</b></p>
      * <ul>

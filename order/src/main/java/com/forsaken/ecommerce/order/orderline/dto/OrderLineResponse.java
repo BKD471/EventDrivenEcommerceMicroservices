@@ -6,4 +6,5 @@ import lombok.Builder;
 public record OrderLineResponse(
         Integer id,
         double quantity
-) { }
+) {
+}
