@@ -4,28 +4,15 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.forsaken.ecommerce</groupId>
-        <artifactId>ecommerce-bom</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
-        <relativePath>../ecommerce-bom/pom.xml</relativePath>
+        <artifactId>ecommerce-parent</artifactId>
+        <version>1.0.0</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <groupId>com.forsaken.ecommerce</groupId>
     <artifactId>config-server</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>config-server</name>
     <description>config-server for ecommerce services</description>
-    <url/>
-    <licenses>
-        <license/>
-    </licenses>
-    <developers>
-        <developer/>
-    </developers>
-    <scm>
-        <connection/>
-        <developerConnection/>
-        <tag/>
-        <url/>
-    </scm>
     <dependencies>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
@@ -41,5 +28,4 @@
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
     </dependencies>
-
 </project>

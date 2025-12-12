@@ -1,21 +1,27 @@
-mvnw
-mvnw.cmd
-.mvn/
-
-
-# Ignore Maven Wrapper in all modules
 */mvnw
 */mvnw.cmd
 */.mvn/
 
 
-# IntelliJ
+!/mvnw
+!/mvnw.cmd
+!/.mvn/
+
+
+target/
+*/target/
+
+
 .idea/
 *.iml
 
-# Maven targets
-*/target/
+
+.vscode/
 
 
 */.gitattributes
 */.gitignore
+
+
+*.log
+logs/

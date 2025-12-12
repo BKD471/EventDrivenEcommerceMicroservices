@@ -6,26 +6,8 @@
     <artifactId>ecommerce-bom</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>ecommerce-bom</name>
-    <description>Common BOM for ecommerce microservices</description>
+    <description>Version alignment BOM for Ecommerce microservices</description>
     <packaging>pom</packaging>
-    <url>https://github.com/BKD471</url>
-    <licenses>
-        <license>
-            <name>Apache License, Version 2.0</name>
-            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
-        </license>
-    </licenses>
-    <developers>
-        <developer>
-            <name>Bhaskar Kumar Das</name>
-            <email>bhaskarkumardas9@gmail.com</email>
-            <organization>Accenture</organization>
-            <organizationUrl>https://github.com/BKD471</organizationUrl>
-        </developer>
-    </developers>
-    <scm>
-        <url>https://github.com/BKD471/EventDrivenEcommerceMicroServices</url>
-    </scm>
     <properties>
         <common-lib.version>1.0.0</common-lib.version>
         <spring-boot.version>3.2.5</spring-boot.version>
@@ -41,21 +23,6 @@
         <kafka.client.version>3.8.0</kafka.client.version>
         <spring-cloud.version>2023.0.3</spring-cloud.version>
     </properties>
-    <modules>
-        <module>common</module>
-    </modules>
-    <dependencies>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-    </dependencies>
-
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -106,25 +73,41 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>org.apache.avro</groupId>
+                <artifactId>avro</artifactId>
+                <version>${avro.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.confluent</groupId>
+                <artifactId>kafka-avro-serializer</artifactId>
+                <version>${confluent.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.confluent</groupId>
+                <artifactId>kafka-schema-registry-client</artifactId>
+                <version>${confluent.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kafka</groupId>
+                <artifactId>kafka-clients</artifactId>
+                <version>${kafka.client.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
     <repositories>
-        <repository>
-            <id>central</id>
-            <url>https://repo.maven.apache.org/maven2</url>
-        </repository>
         <repository>
             <id>confluent</id>
             <url>https://packages.confluent.io/maven/</url>
+        </repository>
+        <repository>
+            <id>central</id>
+            <url>https://repo.maven.apache.org/maven2</url>
         </repository>
     </repositories>
 </project>
