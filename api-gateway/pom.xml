@@ -4,28 +4,15 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.forsaken.ecommerce</groupId>
-        <artifactId>ecommerce-bom</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
-        <relativePath>../ecommerce-bom/pom.xml</relativePath>
+        <artifactId>ecommerce-parent</artifactId>
+        <version>1.0.0</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <groupId>com.forsaken.ecommerce</groupId>
     <artifactId>gateway-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>gateway-service</name>
-    <description>Api Gateway Ecommerce microservices</description>
-    <url/>
-    <licenses>
-        <license/>
-    </licenses>
-    <developers>
-        <developer/>
-    </developers>
-    <scm>
-        <connection/>
-        <developerConnection/>
-        <tag/>
-        <url/>
-    </scm>
+    <description>Api Gateway Ecommerce Microservices</description>
     <dependencies>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
