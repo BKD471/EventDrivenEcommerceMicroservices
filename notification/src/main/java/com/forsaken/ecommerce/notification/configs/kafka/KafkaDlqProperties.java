@@ -28,7 +28,6 @@ public record KafkaDlqProperties(
         @Max(100)
         Integer partitions,
 
-
         @Min(1)
         @Max(100)
         Integer replicas,
@@ -40,11 +39,9 @@ public record KafkaDlqProperties(
         @NotNull
         Double multiplier,
 
-
         @Min(1)
         @Max(100000)
         Integer maxInterval,
-
 
         @Min(1)
         @Max(10)

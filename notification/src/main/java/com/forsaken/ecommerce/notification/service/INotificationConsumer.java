@@ -42,7 +42,6 @@ import org.springframework.messaging.MessagingException;
  */
 public interface INotificationConsumer {
 
-
     /**
      * Consume and process payment success notification events.
      * <p>
